@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Travel independence for people with intellectual disabilities | EasyBoard research</title>
-<meta name="description" content="Research findings, product proposals, UX mockups and flow diagrams for EasyBoard, a travel app for people with intellectual disabilities and their caregivers.">
+<title>Travel independence for PWID | EasyBoard research</title>
+<meta name="description" content="Research findings, shipped UX and next steps for EasyBoard, a travel app for PWID and their caregivers.">
 <style>
   :root {
     color-scheme: light;
@@ -198,6 +198,9 @@
   .tag.p0 { background: var(--green-soft); color: var(--green); }
   .tag.p1 { background: var(--accent-soft); color: var(--accent); }
   .tag.p2 { background: var(--amber-soft); color: var(--amber); }
+  .tag.shipped { background: var(--green-soft); color: var(--green); }
+  .tag.partial { background: var(--amber-soft); color: var(--amber); }
+  .tag.next { background: var(--accent-soft); color: var(--accent); }
   .tag.risk { background: var(--red-soft); color: var(--red); }
   .finding {
     display: grid; grid-template-columns: 64px 1fr; gap: 22px; padding: 26px 0; border-top: 1px solid var(--line);
@@ -560,12 +563,14 @@
   <section class="hero">
     <div class="wrap hero-grid">
       <div>
-        <div class="kicker">Product research · November 2026</div>
-        <h1>Travel independence for people with intellectual disabilities</h1>
-        <p class="lede">What we learned from the research, what EasyBoard should build next, and how to test it with the people it is for.</p>
+        <div class="kicker">Research and shipped UX · November 2026</div>
+        <h1>Travel independence for PWID</h1>
+        <p class="lede">PWID means people with intellectual disabilities. This is what the research says, what is now in EasyBoard, and what still needs testing with the people it is for.</p>
         <div class="meta-chips" aria-label="Document contents">
           <span class="chip"><strong>10</strong> findings</span>
           <span class="chip"><strong>9</strong> features</span>
+          <span class="chip"><strong>4</strong> shipped</span>
+          <span class="chip"><strong>5</strong> partly shipped</span>
           <span class="chip"><strong>7</strong> phone screens</span>
           <span class="chip"><strong>3</strong> flows</span>
           <span class="chip"><strong>26</strong> sources</span>
@@ -611,24 +616,28 @@
     <div class="wrap">
       <div class="section-head">
         <div><div class="section-num">01 / Summary</div><h2>The short version</h2></div>
-        <p>EasyBoard already has the right pieces: photo places, a simple route choice, one-tap calling, and location sharing. The next step is to turn those pieces into a calm travel coach. The app should decide what to show next.</p>
+        <p>EasyBoard already had photo places, calling, and location sharing. This build turns those pieces into a calm travel coach. It does not use live bus data. It uses clear steps, manual confirmation, and a human fallback.</p>
+      </div>
+
+      <div class="callout green">
+        <p><strong>How to read the status labels.</strong> <span class="tag shipped">Shipped</span> means the feature is in the app on this branch. <span class="tag partial">Partly shipped</span> means the core is live, with a named gap. <span class="tag next">Next</span> means it is still a proposal. The research and the mockups keep their original shape so the reasoning is visible.</p>
       </div>
 
       <div class="grid-3">
         <div class="card promise">
-          <div class="promise-num">Promise 01</div>
+          <div class="promise-num">Promise 01 · <span class="tag shipped">Shipped</span></div>
           <blockquote>“I always know the next step.”</blockquote>
-          <p>One instruction at a time, with a photo of the place, a spoken version, and a clear button for what to do now.</p>
+          <p>One instruction at a time, with a photo when the caregiver has added one, a spoken version on the trip, and one clear action.</p>
         </div>
         <div class="card promise">
-          <div class="promise-num">Promise 02</div>
+          <div class="promise-num">Promise 02 · <span class="tag shipped">Shipped</span></div>
           <blockquote>“I can get help without explaining everything.”</blockquote>
-          <p>A help screen that shows the person’s name, destination, location and caregiver’s number. One tap to call. One tap to show a stranger.</p>
+          <p>A help card with the person’s name, destination, location and caregiver’s number. One tap to call. One tap to show a stranger. Emergency 999 is separate.</p>
         </div>
         <div class="card promise">
-          <div class="promise-num">Promise 03</div>
+          <div class="promise-num">Promise 03 · <span class="tag shipped">Shipped</span></div>
           <blockquote>“I decide what my caregiver can see.”</blockquote>
-          <p>Sharing starts with a choice. The person can see what is shared, pause it, and know who is watching.</p>
+          <p>Three sharing choices, a visible state in the header, and a pause that stops the foreground watch. The native background task cleanup is still a known gap. The caregiver cannot change it from their own screen.</p>
         </div>
       </div>
 
@@ -637,11 +646,11 @@
           <span class="tag p0">Build first</span>
           <h3 style="margin-top:10px">Five changes that matter most</h3>
           <ol>
-            <li><strong>Guided Trip Mode.</strong> One step per screen, with a boarding confirmation, photo, audio, progress, and an “I’m not sure” button.</li>
-            <li><strong>Read Aloud and Easy Read.</strong> Short sentences, large text, optional images, and speech on every important screen.</li>
-            <li><strong>Help Card.</strong> A full-screen card the person can show to a driver, staff member, or stranger.</li>
-            <li><strong>Trip Story.</strong> A visual preview of the whole trip before it starts, with photos from the caregiver.</li>
-            <li><strong>Calm change alerts.</strong> Plain words when a bus is late or a route changes, plus one clear action.</li>
+            <li><strong>Guided Trip Mode.</strong> <span class="tag shipped">Shipped</span> One step per screen, with a boarding confirmation, manual advance, progress, and an “I’m not sure” button. No live bus feed yet.</li>
+            <li><strong>Read Aloud and Easy Read.</strong> <span class="tag partial">Partly shipped</span> Three text sizes, an Easy read setting, and speech on the trip screens. Not yet on every screen, and settings stay on the device.</li>
+            <li><strong>Help Card.</strong> <span class="tag shipped">Shipped</span> A full-screen card the person can show to a driver, staff member, or stranger, with a call button and 999.</li>
+            <li><strong>Trip Story.</strong> <span class="tag shipped">Shipped</span> A visual preview of the whole trip, with caregiver photos when they have added them, and a practice start.</li>
+            <li><strong>Calm change alerts.</strong> <span class="tag partial">Partly shipped</span> “The bus did not stop” and “I missed my stop” are in the trip. Live delay, route change, and off-route alerts are not.</li>
           </ol>
         </div>
         <div class="card">
@@ -663,7 +672,7 @@
         <thead><tr><th>Number</th><th>What it means</th><th>Source</th></tr></thead>
         <tbody>
           <tr><td><span class="stat-num">45,000</span></td><td>persons with disabilities aged 19 and above were known to government in December 2023.</td><td><a href="#src-1">[1]</a></td></tr>
-          <tr><td><span class="stat-num">19.2%</span></td><td>of those adults have an intellectual disability. That is about 1 in 5.</td><td><a href="#src-1">[1]</a></td></tr>
+          <tr><td><span class="stat-num">19.2%</span></td><td>of those adults are PWID. That is about 1 in 5.</td><td><a href="#src-1">[1]</a></td></tr>
           <tr><td><span class="stat-num">83.4%</span></td><td>used some form of public transport in the past year.</td><td><a href="#src-1">[1]</a></td></tr>
           <tr><td><span class="stat-num">74.2%</span></td><td>of those who used public transport said they were satisfied with the system.</td><td><a href="#src-1">[1]</a></td></tr>
           <tr><td><span class="stat-num">1 in 4</span></td><td>caregivers of persons with disabilities are 65 or older. Support has to work for older caregivers too.</td><td><a href="#src-1">[1]</a></td></tr>
@@ -680,12 +689,12 @@
     <div class="wrap">
       <div class="section-head">
         <div><div class="section-num">02 / Users</div><h2>Who we design for</h2></div>
-        <p>People with intellectual disabilities are not one group. Reading levels, phone skills, anxiety, support needs, and family rules vary. Design for the edges and the middle gets easier. These personas are composites built from the research, not real customers.</p>
+        <p>PWID are not one group. Reading levels, phone skills, anxiety, support needs, and family rules vary. Design for the edges and the middle gets easier. These personas are composites built from the research, not real customers.</p>
       </div>
 
       <div class="grid-2">
         <article class="card persona">
-          <div class="persona-top"><div class="avatar" aria-hidden="true">R</div><div><h3 style="margin:0">Ryan, 16</h3><span class="tag">Student · mild ID</span></div></div>
+          <div class="persona-top"><div class="avatar" aria-hidden="true">R</div><div><h3 style="margin:0">Ryan, 16</h3><span class="tag">Student · mild support needs</span></div></div>
           <dl>
             <dt>What he needs</dt><dd>To get from school to home on bus 2 without a teacher following him.</dd>
             <dt>What gets in the way</dt><dd>He recognises some numbers but not all. He gets anxious when the bus does not come. He waits until the last second to press the bell.</dd>
@@ -694,7 +703,7 @@
         </article>
 
         <article class="card persona">
-          <div class="persona-top"><div class="avatar" aria-hidden="true">S</div><div><h3 style="margin:0">Siti, 29</h3><span class="tag">Works in a café · mild ID</span></div></div>
+          <div class="persona-top"><div class="avatar" aria-hidden="true">S</div><div><h3 style="margin:0">Siti, 29</h3><span class="tag">Works in a café · mild support needs</span></div></div>
           <dl>
             <dt>What she needs</dt><dd>To meet friends after work without her mother watching every move.</dd>
             <dt>What gets in the way</dt><dd>She reads short sentences. She does not want to be tracked all day. She has been spoken over by staff who assumed she could not decide.</dd>
@@ -783,7 +792,7 @@
         <div class="finding-num">06</div>
         <div>
           <h3>Most travel apps are not designed with this group</h3>
-          <p class="evidence">In the 13-study review, only 2 studies involved people with intellectual disabilities in the design of the technology. Most focused on a single context and did not explore communication, buying tickets, crowds, or asking for help.<a class="cite" href="#src-3">[3]</a> A separate study of ride-hailing apps found that people with intellectual disabilities hit their own difficulties, and recommended family and government support.<a class="cite" href="#src-4">[4]</a></p>
+          <p class="evidence">In the 13-study review, only 2 studies involved PWID in the design of the technology. Most focused on a single context and did not explore communication, buying tickets, crowds, or asking for help.<a class="cite" href="#src-3">[3]</a> A separate study of ride-hailing apps found that PWID hit their own difficulties, and recommended family and government support.<a class="cite" href="#src-4">[4]</a></p>
           <div class="so-what"><span>For EasyBoard</span>Co-design is part of the work. Test with people with different reading levels and support needs. Pay them for their time. Ship the version they can use on a real route.</div>
         </div>
       </article>
@@ -792,7 +801,7 @@
         <div class="finding-num">07</div>
         <div>
           <h3>Easy Read is a system, not a font size</h3>
-          <p class="evidence">NHS England guidance says easy read should use short sentences of about 15 words, one idea per sentence, simple punctuation, active language, and images that match the text. It should be tested with the audience. Images can distract some autistic people, so easy read should be a choice, not a forced mode.<a class="cite" href="#src-6">[6]</a> The CDC guide for adults with intellectual disabilities and very low literacy is stricter: aim for 10 words or fewer per sentence, one idea per screen, literal images, and one action per screen.<a class="cite" href="#src-18">[18]</a> The evidence that easy read improves understanding is limited. A 2026 systematic review of 29 studies found that people valued easy read, but the research quality was low and the effect was unclear.<a class="cite" href="#src-21">[21]</a> The W3C cognitive accessibility guidance adds consistent layouts, clear headings, familiar controls, and help that is easy to find.<a class="cite" href="#src-5">[5]</a></p>
+          <p class="evidence">NHS England guidance says easy read should use short sentences of about 15 words, one idea per sentence, simple punctuation, active language, and images that match the text. It should be tested with the audience. Images can distract some autistic people, so easy read should be a choice, not a forced mode.<a class="cite" href="#src-6">[6]</a> The CDC guide for PWID with very low literacy is stricter: aim for 10 words or fewer per sentence, one idea per screen, literal images, and one action per screen.<a class="cite" href="#src-18">[18]</a> The evidence that easy read improves understanding is limited. A 2026 systematic review of 29 studies found that people valued easy read, but the research quality was low and the effect was unclear.<a class="cite" href="#src-21">[21]</a> The W3C cognitive accessibility guidance adds consistent layouts, clear headings, familiar controls, and help that is easy to find.<a class="cite" href="#src-5">[5]</a></p>
           <div class="so-what"><span>For EasyBoard</span>Build an Easy Read setting that changes text, spacing, and images across the app. Keep an audio version. Test the actual screens with people with different reading levels; do not assume pictures help everyone.</div>
         </div>
       </article>
@@ -801,7 +810,7 @@
         <div class="finding-num">08</div>
         <div>
           <h3>Safety tools can become control tools</h3>
-          <p class="evidence">Research on surveillance in care settings finds a persistent tension between safety and freedom. Professionals worry about restriction, and the ideal use depends on whether everyone affected understands what the technology is for.<a class="cite" href="#src-12">[12]</a> Adults with intellectual disabilities describe carer gatekeeping and restriction as harmful to their wellbeing. They want support to manage risk, not removal of the chance to take it.<a class="cite" href="#src-11">[11]</a></p>
+          <p class="evidence">Research on surveillance in care settings finds a persistent tension between safety and freedom. Professionals worry about restriction, and the ideal use depends on whether everyone affected understands what the technology is for.<a class="cite" href="#src-12">[12]</a> PWID describe carer gatekeeping and restriction as harmful to their wellbeing. They want support to manage risk, not removal of the chance to take it.<a class="cite" href="#src-11">[11]</a></p>
           <div class="so-what"><span>For EasyBoard</span>Make sharing consensual, visible, and time-limited. Default to “share this trip”, not “share my location forever”. Let the person pause without a fight.</div>
         </div>
       </article>
@@ -810,7 +819,7 @@
         <div class="finding-num">09</div>
         <div>
           <h3>Digital exclusion is part of the design brief</h3>
-          <p class="evidence">People with intellectual disabilities remain more digitally excluded than the general population, and support staff sometimes restrict access because of perceived risk.<a class="cite" href="#src-11">[11]</a><a class="cite" href="#src-13">[13]</a> In an Icelandic survey of 144 people with intellectual disabilities, 25.2% said they never or almost never used phone or digital technology to contact others.<a class="cite" href="#src-20">[20]</a> A phone can run out of battery, lose signal, or run out of data. Not everyone has the latest device.</p>
+          <p class="evidence">PWID remain more digitally excluded than the general population, and support staff sometimes restrict access because of perceived risk.<a class="cite" href="#src-11">[11]</a><a class="cite" href="#src-13">[13]</a> In an Icelandic survey of 144 PWID, 25.2% said they never or almost never used phone or digital technology to contact others.<a class="cite" href="#src-20">[20]</a> A phone can run out of battery, lose signal, or run out of data. Not everyone has the latest device.</p>
           <div class="so-what"><span>For EasyBoard</span>Cache the route. Make the help card work offline. Provide an SMS fallback and a printable card. The safety plan cannot depend on a live connection.</div>
         </div>
       </article>
@@ -819,8 +828,8 @@
         <div class="finding-num">10</div>
         <div>
           <h3>Boarding is its own step</h3>
-          <p class="evidence">Travel-training assessments list “knows the bus number”, “identifies the bus and indicates a desire to board”, and “taps the pass” as separate skills.<a class="cite" href="#src-22">[22]</a> The same manual teaches a specific signal (hold the pass in front of your chest) and a specific cue (wait until the vehicle stops before approaching).<a class="cite" href="#src-22">[22]</a> A 15-step bus task analysis treats every step as essential; missing one step stops the trip.<a class="cite" href="#src-26">[26]</a> Boarding is a distinct phase in travel instruction.<a class="cite" href="#src-23">[23]</a> Pictures at retrieval improve prospective memory for people with intellectual disabilities, so the prompt should appear as a photo at the moment the door opens.<a class="cite" href="#src-24">[24]</a> TransLink built a virtual bus tour for people who are not comfortable boarding, which shows the demand for rehearsal.<a class="cite" href="#src-25">[25]</a></p>
-          <div class="so-what"><span>For EasyBoard</span>Make boarding its own step. Wait for the bus to stop. Show the open door. Say “Get on bus 2.” Ask “Are you on the bus?” If there is no confirmation in 45 seconds, prompt again and tell the caregiver. Never treat “I see the bus” as the end of the step.</div>
+          <p class="evidence">Travel-training assessments list “knows the bus number”, “identifies the bus and indicates a desire to board”, and “taps the pass” as separate skills.<a class="cite" href="#src-22">[22]</a> The same manual teaches a specific signal (hold the pass in front of your chest) and a specific cue (wait until the vehicle stops before approaching).<a class="cite" href="#src-22">[22]</a> A 15-step bus task analysis treats every step as essential; missing one step stops the trip.<a class="cite" href="#src-26">[26]</a> Boarding is a distinct phase in travel instruction.<a class="cite" href="#src-23">[23]</a> Pictures at retrieval improve prospective memory for PWID, so the prompt should appear as a photo at the moment the door opens.<a class="cite" href="#src-24">[24]</a> TransLink built a virtual bus tour for people who are not comfortable boarding, which shows the demand for rehearsal.<a class="cite" href="#src-25">[25]</a></p>
+          <div class="so-what"><span>For EasyBoard</span>Make boarding its own step. Wait for the bus to stop. Show the open door. Say “Get on bus 2.” Ask “I am on the bus.” The caregiver sees a boarding check after 45 seconds at the stop. The app does not yet prompt the traveller on a timer, and it has no live bus data. Never treat “I see the bus” as the end of the step.</div>
         </div>
       </article>
 
@@ -886,9 +895,9 @@
         </div>
         <div class="principles">
           <div class="principle"><div><h3>The person is the user</h3><p>The caregiver sets things up and gets alerts. The person with a disability chooses where to go, starts the trip, and decides what to share.</p></div></div>
-          <div class="principle"><div><h3>Privacy is visible</h3><p>Show a clear “Sharing with Mei Leng” badge while sharing is on. Make pause as easy as start. Explain what is shared in one sentence.</p></div></div>
+          <div class="principle"><div><h3>Privacy is visible</h3><p>Show a clear sharing state in the header while sharing is on. Make pause as easy as start. Explain what is shared in one sentence.</p></div></div>
           <div class="principle"><div><h3>Works when the network doesn’t</h3><p>Cache the route, the help card, and the caregiver number. Offer SMS and a phone call. A safety feature has to work on a weak connection.</p></div></div>
-          <div class="principle"><div><h3>Test with people with intellectual disabilities, and pay them</h3><p>Include people who read little, people who use AAC (communication aids), and people who travel alone. Run the test on a real route.</p></div></div>
+          <div class="principle"><div><h3>Test with PWID, and pay them</h3><p>Include people who read little, people who use AAC (communication aids), and people who travel alone. Run the test on a real route.</p></div></div>
         </div>
       </div>
 
@@ -902,54 +911,55 @@
     <div class="wrap">
       <div class="section-head">
         <div><div class="section-num">05 / Today</div><h2>What EasyBoard does now</h2></div>
-        <p>An audit of the current app, based on the code in <span class="mono">runtimes/app</span>. The foundation is good. The gaps are mostly about how information is presented, not about missing maps.</p>
+        <p>An audit of the implemented app in <span class="mono">runtimes/app</span>. The core trip is shipped. The remaining gaps are live bus data, offline support, caregiver alerts, and a full accessibility pass.</p>
       </div>
 
       <div class="grid-2" style="margin-bottom:22px">
         <div class="card">
-          <h3>What already works</h3>
+          <h3>What shipped in this build</h3>
           <ul>
-            <li><strong>Photo cards for saved places.</strong> A picture of home, work, or school is easier than an address.</li>
-            <li><strong>A short home screen.</strong> The person picks a place and goes. That is the right shape.</li>
-            <li><strong>One-tap caregiver call.</strong> No searching for a number under pressure.</li>
-            <li><strong>Auto-stop location sharing.</strong> Sharing ends when the person is within 20 metres of the destination.</li>
-            <li><strong>Caregiver dashboard.</strong> A caregiver can see who is online, call, and locate.</li>
-            <li><strong>System text scaling is on by default.</strong> React Native text grows with the phone setting, and text-only buttons have a 48 px minimum height. The risk is fixed-height layout, not the setting.</li>
-            <li><strong>One codebase.</strong> iOS, Android, and web share the same screens, so fixes reach everyone.</li>
+            <li><strong>Guided Trip Mode.</strong> Story, readiness checks, wait, boarding confirmation, card tap, ride, alight, and arrival. Each step has one primary action and a visible “I’m not sure”.</li>
+            <li><strong>Help Card.</strong> Name, destination, current location sentence, caregiver number, call, full-screen “show this to someone”, and a separate 999 link.</li>
+            <li><strong>Privacy choices.</strong> Trip only, always, and paused. The header shows the current state. Pause stops the foreground watch; the native background task cleanup is still open. Active trips sync to Firebase.</li>
+            <li><strong>Journeys.</strong> A caregiver can add a destination, bus number, and up to eight steps, with photos from the camera or library.</li>
+            <li><strong>Caregiver view.</strong> People cards show stage, last update, sharing state, call, location, and journey setup. A boarding check appears after 45 seconds at the stop.</li>
+            <li><strong>Reading support.</strong> Three text sizes, an Easy read setting, and read aloud on the trip screens. New controls have labels and larger targets.</li>
+            <li><strong>One codebase.</strong> The same screens run on iOS, Android, and web.</li>
           </ul>
         </div>
         <div class="card">
-          <h3>What the audit found</h3>
+          <h3>What is still missing</h3>
           <ul>
-            <li><strong>No accessibility labels.</strong> A screen reader has little to announce beyond the raw text.</li>
-            <li><strong>All-caps buttons.</strong> “START NAVIGATION” and “CALL CAREGIVER” are harder to read than sentence case.</li>
-            <li><strong>Route cards are for planners.</strong> “Route 1”, “Estimated distance”, and “Estimated journey time” do not help someone standing at a bus stop.</li>
-            <li><strong>Steps are text-only.</strong> The directions screen asks the person to read and tap “Next Step”. There is no boarding confirmation, so seeing the bus can look like the end of the step.</li>
-            <li><strong>Help means one phone call.</strong> There is no card to show a stranger and no SMS fallback.</li>
-            <li><strong>Sharing has no consent screen.</strong> The toggle exists, but the person is not told who sees what, for how long.</li>
-            <li><strong>Sharing may not stop cleanly.</strong> The background location task is not stopped on every cleanup path, and the arrival auto-stop is not wired to the route destination. The notification text still contains “xxx”.</li>
-            <li><strong>Large text can clip.</strong> Text scaling is on by default, but fixed heights and one-line truncation break the layout at large sizes.</li>
+            <li><strong>Live bus data.</strong> No arrival time, route change, or vehicle feed. The boarding check uses elapsed time, not a bus arriving.</li>
+            <li><strong>Automatic step advance.</strong> There are no geofences. The person or caregiver advances every step.</li>
+            <li><strong>Offline mode and SMS.</strong> The help card only works while the app is open. There is no offline cache, SMS fallback, second contact, or keep-awake.</li>
+            <li><strong>Voice notes.</strong> Caregivers can add photos, but not record audio for a step.</li>
+            <li><strong>Caregiver alerts.</strong> No push alerts, ETA, off-route, no-movement, or arrival notification. The location page is a map without stage or ETA.</li>
+            <li><strong>Clean location stop.</strong> The destination is not wired into the sharing context, the native background task is not stopped on every cleanup path, and the notification still says “xxx”.</li>
+            <li><strong>Reduced motion and a full screen-reader pass.</strong> The new flows have labels, but the old directions, transit, login, and onboarding screens still need an accessibility audit.</li>
           </ul>
         </div>
       </div>
 
       <table class="audit-table">
-        <caption class="sr-only">Current app audit by area</caption>
-        <thead><tr><th>Area</th><th>What exists</th><th>What gets in the way</th><th>Change</th></tr></thead>
+        <caption class="sr-only">Implemented app audit by area</caption>
+        <thead><tr><th>Area</th><th>In the app now</th><th>Still missing or limited</th><th>Status</th></tr></thead>
         <tbody>
-          <tr><td>Home</td><td>“Where do you want to go?”, photo cards, “Other location”, call caregiver, share location, logout.</td><td>“Other location” opens a map with a pin. That needs map reading and fine motor control. “Logout” is jargon.</td><td>Add “Recent trips” and “Ask someone to help me choose”. Rename “Logout” to “Sign out” and move it away from the main actions.</td></tr>
-          <tr><td>Route choice</td><td>Route cards with transport pills, distance, and time. Emoji for walk, bus, train.</td><td>The person must compare abstract numbers. There is no “easiest” or “the way we practiced” label. Emoji may not match the local vehicle.</td><td>Lead with one recommended route: “Bus 2, 8 stops, about 20 min”. Put other routes behind “Show me other ways”. Use a photo of the bus or train, and <span class="mono">@expo/vector-icons</span> (already installed) for the mode.</td></tr>
-          <tr><td>Directions</td><td>“Step 3 of 6”, instruction text, progress dots, “START NAVIGATION”, “Next Step”, “ARRIVED”.</td><td>Reading load is high. No audio. No landmark photo. The person must decide when to tap Next. There is no boarding step, so seeing the bus is treated as the end of the step. A missed stop has no recovery path.</td><td>Guided Trip Mode: one instruction, one photo, audio, a separate boarding screen with “I am on the bus”, and “I’m not sure” on every step.</td></tr>
-          <tr><td>Help</td><td>“CALL CAREGIVER”.</td><td>If the person cannot speak, or the caregiver does not answer, there is no next option.</td><td>Help Card with name, destination, location, caregiver number, “Show this to someone”, SMS, and emergency call.</td></tr>
-          <tr><td>Location sharing</td><td>Toggle, live updates, auto-stop at 20 metres, push notifications to caregiver.</td><td>No explanation of who sees what. No pause. No time limit. The background task may keep running after stop, arrival auto-stop is not wired to the route destination, and the notification says “xxx”.</td><td>Fix the stop path and arrival trigger first. Then add the Privacy Center: three presets, a visible sharing badge, pause, and trip-only sharing by default.</td></tr>
-          <tr><td>Caregiver</td><td>Dashboard with online/offline, call, locate. Location tracking page with a map.</td><td>No trip status, no ETA, no “stuck” alert, no arrival confirmation. The caregiver has to watch a dot.</td><td>Caregiver Co-pilot: trip cards, stage, ETA, alerts for help or no movement, voice notes. Map on tap, not by default.</td></tr>
-          <tr><td>Language</td><td>Mostly plain English, but some abstract phrases.</td><td>“Bookmark places you frequently travel to for easy access” is a sentence to decode. “No route data available” is technical.</td><td>Use the copy deck in the Build section. One idea per sentence. About 15 words.</td></tr>
-          <tr><td>Accessibility</td><td>Large buttons in some places, good colour contrast, simple layout, system text scaling.</td><td>No accessibility labels, no live regions for errors, fixed-height areas clip large text, motion without a reduced-motion check.</td><td>Add labels, roles, hints, live regions, 48 px targets, flexible heights, and a reduced-motion setting. Test with VoiceOver and TalkBack.</td></tr>
+          <tr><td>Home</td><td>“Hello, [name]. Where do you want to go?”, saved place cards, journey destinations, an active trip card, and “I need help”. Sharing state sits in the header.</td><td>No “Other place” map, recent trips, or “Ask someone to help me choose”. Sign out moved to Privacy.</td><td><span class="tag shipped">Shipped</span></td></tr>
+          <tr><td>Trip story</td><td>Eight-step timeline, caregiver photos when present, readiness checks for fare card, battery, and headphones, start, practice, and caregiver call.</td><td>No per-step voice notes, quiz, caregiver sign-off, or photo date. Practice runs the same steps without sharing, not a separate lesson.</td><td><span class="tag shipped">Shipped</span></td></tr>
+          <tr><td>Guided trip</td><td>Wait, board, tap, ride, alight, and arrive. Manual primary action, driver script, “The bus did not stop”, “I missed my stop”, and help on every step.</td><td>No GPS advance, live bus arrival, or in-trip 45-second prompt. The caregiver sees the boarding check; the traveller does not get a timer.</td><td><span class="tag shipped">Shipped</span></td></tr>
+          <tr><td>Help</td><td>Help card with name, destination, location sentence, caregiver number, call, full-screen show mode, and 999.</td><td>No SMS or location send, optional photo, second contact, or keep-awake. “Works while this app is open” is honest.</td><td><span class="tag shipped">Shipped</span></td></tr>
+          <tr><td>Privacy</td><td>Three modes, a plain-language preview, pause, sign out, and a visible sharing badge. The caregiver cannot change it silently.</td><td>No per-viewer list, history toggle, caregiver-view preview, or time limit beyond the chosen mode.</td><td><span class="tag shipped">Shipped</span></td></tr>
+          <tr><td>Location sharing</td><td>Background location on native, browser watch on web, live caregiver map, start and stop notifications.</td><td>Arrival auto-stop is not wired; the notification still says “xxx”; the native background task stop path is incomplete; no offline mode.</td><td><span class="tag partial">Partly shipped</span></td></tr>
+          <tr><td>Caregiver</td><td>People cards with stage, update time, sharing state, call, location or journey action, and a 45-second boarding check. Active trips sync across devices.</td><td>No ETA, push alerts, voice notes, arrival notification, off-route, or no-movement alert. The map has no stage or ETA.</td><td><span class="tag partial">Partly shipped</span></td></tr>
+          <tr><td>Journeys</td><td>Caregiver picks a person; adds destination and bus number; edits up to eight steps; adds camera or library photos; edits or deletes a journey.</td><td>No step reorder, photo date, preview, or “reviewed for this term” reminder.</td><td><span class="tag shipped">Shipped</span></td></tr>
+          <tr><td>Reading</td><td>Three text sizes, Easy read spacing, read aloud on trip screens, labels on the new controls, and 44–48 px targets.</td><td>Settings stay on the device. No reduced-motion setting. No complete VoiceOver or TalkBack pass. Fixed-height legacy screens can still clip.</td><td><span class="tag partial">Partly shipped</span></td></tr>
+          <tr><td>Language</td><td>The new trip, help, privacy, journey, and caregiver screens use short, literal sentences.</td><td>The old route, login, and onboarding copy is still mixed. The copy deck below is the target, not a finished sweep.</td><td><span class="tag partial">Partly shipped</span></td></tr>
         </tbody>
       </table>
 
       <div class="callout">
-        <p><strong>The honest summary.</strong> EasyBoard is a good map app with a caregiver call button. It is not yet a travel coach. The gap is the layer between “here is the route” and “here is what you do now”.</p>
+        <p><strong>The honest summary.</strong> EasyBoard now works as a step-by-step travel coach for a practised route. It still cannot tell when a bus is coming, recover a trip on a weak connection, or give a caregiver an exception alert. Those are the next product gaps, not polish.</p>
       </div>
     </div>
   </section>
@@ -957,36 +967,36 @@
   <section class="section" id="features">
     <div class="wrap">
       <div class="section-head">
-        <div><div class="section-num">06 / Features</div><h2>What to build</h2></div>
-        <p>Nine features, in three priority groups. P0 is the next release. P1 follows when P0 is stable with real users. Each feature names the problem, the behaviour, the risk, and the signal that it worked.</p>
+        <div><div class="section-num">06 / Features</div><h2>What is shipped and what comes next</h2></div>
+        <p>Nine features kept from the original proposal. The priority filter still shows what was planned first. The status badge on each card says what is actually in the app now.</p>
       </div>
 
       <div class="filters" role="group" aria-label="Filter features by priority">
         <button class="filter" type="button" data-filter="all" aria-pressed="true">All 9</button>
-        <button class="filter" type="button" data-filter="p0" aria-pressed="false">P0 · Next</button>
-        <button class="filter" type="button" data-filter="p1" aria-pressed="false">P1 · Later</button>
+        <button class="filter" type="button" data-filter="p0" aria-pressed="false">P0 · Build first</button>
+        <button class="filter" type="button" data-filter="p1" aria-pressed="false">P1 · Next</button>
       </div>
 
       <article class="card feature" data-priority="p0" id="f-guided">
         <div class="feature-main">
-          <div class="feature-top"><span class="tag p0">P0</span><h3>Guided Trip Mode</h3></div>
-          <p class="why">The current directions screen is a list of text steps. It assumes the person can read, remember where they are in the list, and decide when to move on. That is the exact set of skills the research says is hard.</p>
-          <p><strong>What it does.</strong> Turns a route into a sequence of single-purpose cards. Each card has one instruction, a photo of the place, a spoken version, and one clear action. The app advances when the phone reaches a place (a geofence), on a tap, or after a caregiver confirms. Bus arrival is a tap or a live vehicle feed, never a geofence alone. Boarding is its own step. The app asks for a boarding confirmation.</p>
+          <div class="feature-top"><span class="tag p0">P0</span><span class="tag shipped">Shipped</span><h3>Guided Trip Mode</h3></div>
+          <p class="why">The old directions screen was a list of text steps. It assumed the person could read, remember where they were in the list, and decide when to move on. That is the exact set of skills the research says is hard.</p>
+          <p><strong>What it does.</strong> Turns a saved route into a sequence of single-purpose cards. Each active card has one instruction, a scene illustration, a read-aloud control, and one primary action. The traveller advances manually. Journey photos appear in the story, not on the active step. Boarding is its own step. The app does not use GPS or live bus data.</p>
           <ol>
             <li><strong>Before the trip:</strong> show the Trip Story and a short readiness check (fare card, phone battery, headphones).</li>
-            <li><strong>At each step:</strong> one sentence, one photo, one audio button, and “I did it”.</li>
-            <li><strong>When the bus arrives:</strong> wait for it to stop. Show the photo of the open door. Say “Get on bus 2.” Ask “Are you on the bus?” A confirmation moves the trip forward. No confirmation after 45 seconds triggers a gentle prompt and a caregiver alert.</li>
-            <li><strong>If the person is unsure:</strong> “I’m not sure” opens three options: show where I am, call my caregiver, or show my help card.</li>
-            <li><strong>If a step is missed:</strong> do not recalculate the whole route. Say “Stay on the bus. We will call you.” and alert the caregiver.</li>
-            <li><strong>At arrival:</strong> “You are here” with the destination photo, and a caregiver notification.</li>
+            <li><strong>At each step:</strong> one sentence, a scene illustration, read aloud, and one primary action.</li>
+            <li><strong>When the bus arrives:</strong> “The bus has stopped” opens the boarding card. “Get on bus 2” asks “I am on the bus”. A confirmation moves to the card tap, then the ride.</li>
+            <li><strong>If the person is unsure:</strong> “I’m not sure” opens the Help Card. Call caregiver is always visible.</li>
+            <li><strong>If a step is missed:</strong> “The bus did not stop” keeps the person waiting. “I missed my stop” says “Stay on the bus” and offers a caregiver call.</li>
+            <li><strong>At arrival:</strong> “You are here” clears the trip locally and in Firebase when the person taps Done.</li>
           </ol>
-          <p class="mono" style="margin-top:12px">“Walk to the bus stop. It is 3 minutes away.” · “Wait for bus 2. It will come in 4 minutes.” · “The bus has stopped. The door is open. Get on bus 2.” · “Hold your card in front of your chest so the driver sees you.” · “Get off in 8 stops. I will count with you.”</p>
+          <p class="mono" style="margin-top:12px">“Wait for bus 2. Stand near the blue sign.” · “The bus has stopped. The door is open. Check the number: 2.” · “Tap your card. Wait for the green light.” · “Ride 8 stops. I will count with you.” · “Get off at your stop. Then walk to your destination.”</p>
         </div>
         <div class="feature-side">
           <dl>
-            <dt>Effort</dt><dd>Large. New trip model, step player, geofences, offline cache.</dd>
+            <dt>Effort</dt><dd>Large; shipped. Local trip model, story, step player, Firebase active-trip sync. No geofence or offline cache yet.</dd>
             <dt>Evidence</dt><dd>Context-aware prompts and step-by-step guidance improved independent travel in small studies.<a class="cite" href="#src-3">[3]</a> Travel-training assessments treat “identifies the bus and indicates a desire to board” as a separate skill, and photos at retrieval support prospective memory.<a class="cite" href="#src-22">[22]</a><a class="cite" href="#src-24">[24]</a></dd>
-            <dt>Risk</dt><dd>GPS drift triggers the wrong step. The person may also tap “I am on the bus” before boarding. Mitigation: manual advance, a 45-second boarding check, a photo of the open door, and a caregiver voice note.</dd>
+            <dt>Risk</dt><dd>Manual advance can be missed. The person may tap “I am on the bus” too early. There is no live bus data. Mitigation: explicit confirmation, a driver script, a caregiver boarding check after 45 seconds, and a call button.</dd>
             <dt>Success signal</dt><dd>More trips completed without a caregiver call. More bus arrivals followed by boarding within 60 seconds. Shorter recovery time after a missed stop.</dd>
           </dl>
         </div>
@@ -994,22 +1004,22 @@
 
       <article class="card feature" data-priority="p0" id="f-easyread">
         <div class="feature-main">
-          <div class="feature-top"><span class="tag p0">P0</span><h3>Easy Read and Read Aloud</h3></div>
+          <div class="feature-top"><span class="tag p0">P0</span><span class="tag partial">Partly shipped</span><h3>Easy Read and Read Aloud</h3></div>
           <p class="why">Easy read changes how a screen reads. It needs short sentences, one idea per screen, and images that match the words. The NHS guidance asks for about 15 words per sentence and testing with the audience.<a class="cite" href="#src-6">[6]</a> The CDC guide is stricter for people with very low literacy: 10 words or fewer, one idea per screen, and literal images.<a class="cite" href="#src-18">[18]</a> The evidence is mixed, so test it with the people who will use it.<a class="cite" href="#src-21">[21]</a></p>
-          <p><strong>What it does.</strong> A global setting that changes copy, spacing, and images across the app. Every important screen gets a speaker button. The setting is per person, not per device, so it follows the account.</p>
+          <p><strong>What it does.</strong> Adds a reading settings panel with Easy read, Normal, Large, and Larger text. The trip screens have a read-aloud control using the phone voice. Settings stay on the device, not the account.</p>
           <ol>
-            <li><strong>Text:</strong> sentence case, active voice, one action per sentence, no jargon or acronyms.</li>
-            <li><strong>Layout:</strong> larger type, more line spacing, shorter line length, one column.</li>
-            <li><strong>Images:</strong> optional. Some people find pictures helpful; some autistic people find them distracting. Let the person choose.</li>
-            <li><strong>Audio:</strong> native text-to-speech for every instruction, error, and button label. Respect the phone’s language and speaking rate.</li>
-            <li><strong>Fallback:</strong> if speech is unavailable, show the text and offer a caregiver voice note.</li>
+            <li><strong>Text:</strong> the new trip, help, privacy, journey, and caregiver screens use short, literal sentences.</li>
+            <li><strong>Layout:</strong> Easy read adds spacing and a small type increase; the three text sizes scale the new screens.</li>
+            <li><strong>Images:</strong> caregiver journey photos and scene illustrations. There is no image on/off setting.</li>
+            <li><strong>Audio:</strong> <span class="mono">expo-speech</span> reads the trip story and each active step. It is not yet on every screen or button.</li>
+            <li><strong>Fallback:</strong> the text always stays visible. There is no caregiver-recorded name or voice note.</li>
           </ol>
         </div>
         <div class="feature-side">
           <dl>
-            <dt>Effort</dt><dd>Medium. Copy deck, TTS service, design tokens, QA on both platforms.</dd>
+            <dt>Effort</dt><dd>Medium; core shipped. Settings panel, design tokens, and speech on the trip. No account sync.</dd>
             <dt>Evidence</dt><dd>NHS England easy read guidance; W3C COGA design patterns for clear purpose, familiar controls, and help.<a class="cite" href="#src-6">[6]</a><a class="cite" href="#src-5">[5]</a></dd>
-            <dt>Risk</dt><dd>Text-to-speech mispronounces names and places. Mitigation: caregiver can record a name; show the written name too.</dd>
+            <dt>Risk</dt><dd>Text-to-speech mispronounces names and places. Mitigation: show the written name too. A caregiver recording feature is still missing.</dd>
             <dt>Success signal</dt><dd>Task success on the top five journeys. Fewer “what does this mean?” questions in testing.</dd>
           </dl>
         </div>
@@ -1017,22 +1027,22 @@
 
       <article class="card feature" data-priority="p0" id="f-helpcard">
         <div class="feature-main">
-          <div class="feature-top"><span class="tag p0">P0</span><h3>Help Card</h3></div>
+          <div class="feature-top"><span class="tag p0">P0</span><span class="tag shipped">Shipped</span><h3>Help Card</h3></div>
           <p class="why">People avoid asking strangers or staff for help because it is embarrassing and hard to explain. A card does the explaining for them. The UK research recommended free assistance cards; the JAM Card shows the model works at scale.<a class="cite" href="#src-7">[7]</a><a class="cite" href="#src-10">[10]</a></p>
-          <p><strong>What it does.</strong> A full-screen card with the person’s first name, photo (optional), destination, current area, caregiver name and number, and a plain sentence: “I need help getting to Work. Please call Mei Leng.” The person can show it, read it, or have it read aloud. A second card is for the driver: “I am going to Work. Please tell me when to get off.”</p>
+          <p><strong>What it does.</strong> A full-screen card with the person’s name, destination, current location sentence, caregiver name and number, and a plain sentence: “Please call my caregiver.” The person can show it, call, or use the separate 999 link. A driver script sits below: “I am going to Work. Please tell me when to get off.”</p>
           <ol>
-            <li><strong>Open:</strong> one tap from the home screen and from every step.</li>
-            <li><strong>Show:</strong> large text, high contrast, screen stays awake for 60 seconds.</li>
-            <li><strong>Call:</strong> a single button to the caregiver. If there is no answer, offer the second contact.</li>
-            <li><strong>Send:</strong> SMS with the card text and a map link; works when data is weak.</li>
-            <li><strong>Emergency:</strong> a separate, clearly labelled button for 999, not mixed with the caregiver call.</li>
+            <li><strong>Open:</strong> one tap from the home screen and from every trip step.</li>
+            <li><strong>Show:</strong> large text, high contrast, and a full-screen mode for showing a stranger.</li>
+            <li><strong>Call:</strong> one button to the caregiver. There is no second contact yet.</li>
+            <li><strong>Emergency:</strong> a separate 999 link. It is never dialled automatically.</li>
+            <li><strong>Offline:</strong> the card says “Works while this app is open.” It is not cached for offline use.</li>
           </ol>
         </div>
         <div class="feature-side">
           <dl>
-            <dt>Effort</dt><dd>Small to medium. Mostly UI, SMS deep link, offline cache.</dd>
+            <dt>Effort</dt><dd>Small to medium; core shipped. No SMS, photo, second contact, or keep-awake yet.</dd>
             <dt>Evidence</dt><dd>UK DfT assistance-card recommendation; JAM Card adoption; local Helping Hand identifiers.<a class="cite" href="#src-7">[7]</a><a class="cite" href="#src-10">[10]</a><a class="cite" href="#src-1">[1]</a></dd>
-            <dt>Risk</dt><dd>Oversharing personal details to strangers. Mitigation: first name only, no home address, caregiver can turn off the photo.</dd>
+            <dt>Risk</dt><dd>Oversharing personal details to strangers. Mitigation: destination and caregiver number only; no home address; no photo.</dd>
             <dt>Success signal</dt><dd>Help card opened on real trips. Successful handovers to staff or caregivers. People say they would use it again.</dd>
           </dl>
         </div>
@@ -1040,22 +1050,22 @@
 
       <article class="card feature" data-priority="p0" id="f-story">
         <div class="feature-main">
-          <div class="feature-top"><span class="tag p0">P0</span><h3>Trip Story</h3></div>
+          <div class="feature-top"><span class="tag p0">P0</span><span class="tag shipped">Shipped</span><h3>Trip Story</h3></div>
           <p class="why">A route line is an abstract drawing. A story is a sequence of places the person can recognise. The MINDS travel training example shows the power of photos, placards, and repetition.<a class="cite" href="#src-8">[8]</a></p>
-          <p><strong>What it does.</strong> Before the trip, shows a visual timeline: walk to the stop, wait for bus 2, get on bus 2, tap the card, sit near the driver, ride 8 stops, get off near the blue library, walk 2 minutes, arrive. Each item has a photo and an optional caregiver voice note.</p>
+          <p><strong>What it does.</strong> Before the trip, shows a visual timeline: walk to the stop, wait for bus 2, get on bus 2, tap the card, sit near the driver, ride 8 stops, get off, arrive. It uses the caregiver’s journey steps and photos when they exist, and a default eight-step story when they do not.</p>
           <ol>
-            <li><strong>Create:</strong> the caregiver adds or confirms up to 8 steps and a photo for each.</li>
-            <li><strong>Preview:</strong> the person can swipe through the story before starting.</li>
-            <li><strong>Practice:</strong> “Practice this trip” runs the same story with quiz questions, including “the bus stops, what do you do?”</li>
-            <li><strong>Start:</strong> the story becomes the Guided Trip Mode. The first step is already open.</li>
+            <li><strong>Create:</strong> the caregiver adds up to 8 steps and a photo for any step.</li>
+            <li><strong>Preview:</strong> the person sees the full timeline before starting. There is no swipe-through or per-step voice note.</li>
+            <li><strong>Practice:</strong> “Practice this trip” runs the same steps without sharing or publishing an active trip. It has no quiz or sign-off.</li>
+            <li><strong>Start:</strong> “Start trip” opens the first step and starts sharing if the privacy mode allows it.</li>
           </ol>
           <div class="callout-small" style="margin-top:12px">Boarding is a step. The story shows the open door, the card tap, and the seat. The live trip asks for confirmation. A generic map pin is not a landmark.</div>
         </div>
         <div class="feature-side">
           <dl>
-            <dt>Effort</dt><dd>Medium. Media upload, step editor, offline storage.</dd>
+            <dt>Effort</dt><dd>Medium; core shipped. Photo upload and step editor are live. Offline storage and per-step audio are not.</dd>
             <dt>Evidence</dt><dd>Photo and landmark prompts improved navigation in small studies; travel training improved confidence.<a class="cite" href="#src-3">[3]</a><a class="cite" href="#src-2">[2]</a> A meta-analysis of visual activity schedules found a large effect on independent skills (Tau-U 0.96).<a class="cite" href="#src-19">[19]</a> Virtual bus tours are used to rehearse boarding, and pictures at retrieval support prospective memory.<a class="cite" href="#src-25">[25]</a><a class="cite" href="#src-24">[24]</a></dd>
-            <dt>Risk</dt><dd>Old photos confuse the person. Mitigation: “photo updated” date; caregiver review before each term.</dd>
+            <dt>Risk</dt><dd>Old photos confuse the person. Mitigation is still missing: a “photo updated” date and a termly caregiver review.</dd>
             <dt>Success signal</dt><dd>More people start a trip after viewing the story. Fewer wrong-stop incidents. Fewer boarding delays.</dd>
           </dl>
         </div>
@@ -1063,21 +1073,22 @@
 
       <article class="card feature" data-priority="p0" id="f-alerts">
         <div class="feature-main">
-          <div class="feature-top"><span class="tag p0">P0</span><h3>Calm change alerts</h3></div>
+          <div class="feature-top"><span class="tag p0">P0</span><span class="tag partial">Partly shipped</span><h3>Calm change alerts</h3></div>
           <p class="why">Uncertainty is the main source of anxiety. A late bus, a platform change, or a missed stop can end the trip. The UK research found that real-time information and clear alternatives reduced stress.<a class="cite" href="#src-7">[7]</a></p>
-          <p><strong>What it does.</strong> Watches the trip for delays, route changes, and deviations. When something changes, it shows one calm sentence and one action. It does not redraw the map or show a red warning.</p>
+          <p><strong>What it does.</strong> Handles the changes the app can see without live data. When the bus does not stop, the wait screen offers a calm next step. When the person misses a stop, the ride screen says stay on the bus and offers a call. The caregiver sees a boarding check after 45 seconds at the stop.</p>
           <ol>
-            <li><strong>Delay:</strong> “The bus is 6 minutes late. Wait here. I will tell you when it comes.”</li>
-            <li><strong>Missed stop:</strong> “You passed your stop. Stay on the bus. We will call you.” The caregiver gets the same message.</li>
-            <li><strong>Off route:</strong> “You are near the MRT station. Are you okay?” with “Yes” and “I need help”.</li>
-            <li><strong>No movement:</strong> after 10 minutes, ask the person first. Only alert the caregiver if there is no answer or the person asks.</li>
+            <li><strong>Delay:</strong> Not shipped. There is no live arrival feed.</li>
+            <li><strong>Missed stop:</strong> Shipped. “Stay on the bus. We are calling your caregiver now.”</li>
+            <li><strong>Off route:</strong> Not shipped. No location rule or “Are you okay?” prompt.</li>
+            <li><strong>No movement:</strong> Not shipped. No 10-minute inactivity alert.</li>
+            <li><strong>Boarding check:</strong> Shipped for the caregiver, based on elapsed time at the waiting stage.</li>
           </ol>
         </div>
         <div class="feature-side">
           <dl>
-            <dt>Effort</dt><dd>Medium. Location rules, message templates, escalation logic.</dd>
+            <dt>Effort</dt><dd>Core partly shipped. Live delay, off-route, and no-movement rules are still needed.</dd>
             <dt>Evidence</dt><dd>UK DfT real-time information findings; W3C COGA error prevention and clear next steps.<a class="cite" href="#src-7">[7]</a><a class="cite" href="#src-5">[5]</a></dd>
-            <dt>Risk</dt><dd>False alarms annoy caregivers and frighten the person. Mitigation: confidence thresholds, “I’m okay” button, caregiver confirms before calling.</dd>
+            <dt>Risk</dt><dd>False alarms annoy caregivers and frighten the person. Mitigation: confidence thresholds, “I’m okay” button, caregiver confirms before calling. The current boarding check is a timer, not a bus signal.</dd>
             <dt>Success signal</dt><dd>Fewer panic calls. Faster recovery. Caregivers say alerts are useful, not noisy.</dd>
           </dl>
         </div>
@@ -1085,19 +1096,19 @@
 
       <article class="card feature" data-priority="p1" id="f-copilot">
         <div class="feature-main">
-          <div class="feature-top"><span class="tag p1">P1</span><h3>Caregiver Co-pilot</h3></div>
+          <div class="feature-top"><span class="tag p1">P1</span><span class="tag partial">Partly shipped</span><h3>Caregiver Co-pilot</h3></div>
           <p class="why">A live dot does not tell a caregiver what is happening. Caregivers need to know “is he on the bus?”, “is he stuck?”, “when will he arrive?”. Watching a dot all day does not scale to a classroom or a family with two jobs.<a class="cite" href="#src-1">[1]</a></p>
-          <p><strong>What it does.</strong> Replaces the dashboard with trip cards. Each card shows the current stage, ETA, last update, and one action. The map is one tap away.</p>
+          <p><strong>What it does.</strong> Replaces the dashboard with people cards. Each card shows the current stage, last update, sharing state, and one action. Call is always available. Location or journey setup sits next to it. The map is one tap away.</p>
           <ol>
-            <li><strong>Trip card:</strong> “Ryan is on bus 2. 12 minutes to Work.”</li>
-            <li><strong>Alerts:</strong> started, arrived, asked for help, off route, no movement 10 minutes, bus arrived but not boarded after 45 seconds.</li>
-            <li><strong>Voice note:</strong> “Press the green button when you see the blue gate.”</li>
-            <li><strong>“I’m worried” button:</strong> escalates to a call, not a silent alert.</li>
+            <li><strong>Person card:</strong> “Ryan · Waiting at the stop · updated 9:12” and a three-step progress bar.</li>
+            <li><strong>Alerts:</strong> a boarding check after 45 seconds at the stop. No push alerts, arrival notification, off-route, or no-movement alert yet.</li>
+            <li><strong>Location and journey:</strong> see the live map while sharing, or set up a journey from the same card.</li>
+            <li><strong>Cross-device:</strong> the active trip is read from Firebase, so a caregiver on another phone sees the same stage.</li>
           </ol>
         </div>
         <div class="feature-side">
           <dl>
-            <dt>Effort</dt><dd>Medium. Depends on the trip model from Guided Trip Mode.</dd>
+            <dt>Effort</dt><dd>Medium; core shipped. Active-trip sync, people cards, and boarding check are live. ETA and push alerts are not.</dd>
             <dt>Evidence</dt><dd>Caregiver burden and the need for exceptions, not continuous monitoring.<a class="cite" href="#src-1">[1]</a><a class="cite" href="#src-12">[12]</a></dd>
             <dt>Risk</dt><dd>Becomes surveillance by another name. Mitigation: trip-only sharing, visible consent, no history by default.</dd>
             <dt>Success signal</dt><dd>Fewer “where are you?” calls. Caregivers respond to alerts within 2 minutes.</dd>
@@ -1107,21 +1118,21 @@
 
       <article class="card feature" data-priority="p1" id="f-practice">
         <div class="feature-main">
-          <div class="feature-top"><span class="tag p1">P1</span><h3>Practice Mode</h3></div>
+          <div class="feature-top"><span class="tag p1">P1</span><span class="tag partial">Partly shipped</span><h3>Practice Mode</h3></div>
           <p class="why">Travel training works through repetition, modelling, and safe mistakes. MINDS used 16 weeks of accompanied trips and simulated problems such as missing a stop. An app can support that routine between sessions.<a class="cite" href="#src-8">[8]</a></p>
-          <p><strong>What it does.</strong> A rehearsal flow for a saved route. The person and caregiver walk through the story, answer “what do you do next?” questions, and mark the trip as “ready to try alone”.</p>
+          <p><strong>What it does.</strong> “Practice this trip” runs the same story and step flow without publishing an active trip and without sharing location. It is a safe rehearsal, not a lesson.</p>
           <ol>
-            <li><strong>Rehearse:</strong> the story plays with photos and audio, without live location.</li>
-            <li><strong>Quiz:</strong> “The bus does not come. What do you do?” with three picture answers.</li>
-            <li><strong>Simulate:</strong> “You missed your stop. Stay on the bus. Call Mei Leng.”</li>
-            <li><strong>Sign-off:</strong> the caregiver marks the route as practised. The home screen labels it “The way we practised”.</li>
+            <li><strong>Rehearse:</strong> the story and steps, with photos and read aloud, without live location.</li>
+            <li><strong>Practice safety:</strong> missed bus and missed stop paths can be tried without alerting a caregiver.</li>
+            <li><strong>No quiz yet:</strong> there are no “what do you do next?” questions or picture answers.</li>
+            <li><strong>No sign-off:</strong> the caregiver cannot mark a route as practised, and the home screen does not label it “The way we practised”.</li>
           </ol>
         </div>
         <div class="feature-side">
           <dl>
-            <dt>Effort</dt><dd>Medium. Reuses Trip Story and quiz content.</dd>
+            <dt>Effort</dt><dd>Medium; rehearsal shipped. Quiz, simulation scoring, and caregiver sign-off are still needed.</dd>
             <dt>Evidence</dt><dd>Travel training improved self-efficacy; video and photo prompts improved route learning.<a class="cite" href="#src-2">[2]</a><a class="cite" href="#src-3">[3]</a></dd>
-            <dt>Risk</dt><dd>Quiz success is mistaken for real-world readiness. Mitigation: caregiver sign-off and a real accompanied trip.</dd>
+            <dt>Risk</dt><dd>Practice success is mistaken for real-world readiness. Mitigation: caregiver sign-off and a real accompanied trip. Neither is in the app yet.</dd>
             <dt>Success signal</dt><dd>More first solo trips after practice. Fewer help requests on practised routes.</dd>
           </dl>
         </div>
@@ -1129,41 +1140,41 @@
 
       <article class="card feature" data-priority="p1" id="f-voice">
         <div class="feature-main">
-          <div class="feature-top"><span class="tag p1">P1</span><h3>Voice notes and landmark photos</h3></div>
+          <div class="feature-top"><span class="tag p1">P1</span><span class="tag partial">Partly shipped</span><h3>Voice notes and landmark photos</h3></div>
           <p class="why">A caregiver’s voice is familiar and can carry meaning that text cannot. “Turn left at the blue gate” is easier than “continue for 120 metres”. Personal landmarks also solve the last-100-metres problem that maps handle badly.</p>
-          <p><strong>What it does.</strong> Lets the caregiver attach a short voice note and a photo to any step. The person hears the note at the right moment, with a replay button.</p>
+          <p><strong>What it does.</strong> Lets the caregiver attach a photo to any journey step from the camera or photo library. The trip story and the active step show the photo. Voice notes are not implemented.</p>
           <ol>
-            <li><strong>Record:</strong> up to 15 seconds per step, with a transcript.</li>
-            <li><strong>Attach:</strong> photo, voice note, and a short label.</li>
-            <li><strong>Play:</strong> automatically at the step, or on tap. Never autoplay in public without headphones.</li>
-            <li><strong>Update:</strong> caregiver can replace a note when the route changes.</li>
+            <li><strong>Record:</strong> Not shipped. There is no audio recorder or transcript.</li>
+            <li><strong>Attach:</strong> Shipped. Photo, step name, and instructions.</li>
+            <li><strong>Play:</strong> The read-aloud control reads the step text. A caregiver voice cannot be played because it cannot be recorded.</li>
+            <li><strong>Update:</strong> Shipped. The caregiver can change or remove a photo.</li>
           </ol>
         </div>
         <div class="feature-side">
           <dl>
-            <dt>Effort</dt><dd>Medium. Audio recording, storage, playback, transcript.</dd>
+            <dt>Effort</dt><dd>Photos shipped. Audio recording, storage, playback, and transcript remain.</dd>
             <dt>Evidence</dt><dd>Visual and auditory prompts are the most common design elements in the transport-tech review.<a class="cite" href="#src-3">[3]</a></dd>
-            <dt>Risk</dt><dd>Audio privacy in public; unclear speech; language mismatch. Mitigation: headphones prompt, transcript, re-record.</dd>
-            <dt>Success signal</dt><dd>Voice notes played on real steps. Fewer wrong turns near the destination.</dd>
+            <dt>Risk</dt><dd>Old photos confuse the person. Audio privacy, unclear speech, and language mismatch wait for the voice-note feature. Mitigation: photo date and termly review, neither shipped yet.</dd>
+            <dt>Success signal</dt><dd>Photos present on real steps. Fewer wrong turns near the destination. Voice-note use is not measurable yet.</dd>
           </dl>
         </div>
       </article>
 
       <article class="card feature" data-priority="p1" id="f-privacy">
         <div class="feature-main">
-          <div class="feature-top"><span class="tag p1">P1</span><h3>Privacy Center</h3></div>
-          <p class="why">Location sharing is useful only if the person trusts it. Research on surveillance in care finds a tension between safety and autonomy, and adults with intellectual disabilities describe restriction as harmful.<a class="cite" href="#src-12">[12]</a><a class="cite" href="#src-11">[11]</a></p>
-          <p><strong>What it does.</strong> One screen that answers three questions: What does my caregiver see? When? Who else can see it? It uses three presets and one pause button. For people who cannot consent, the caregiver and a trusted person record the decision and who agreed.</p>
+          <div class="feature-top"><span class="tag p1">P1</span><span class="tag shipped">Shipped</span><h3>Privacy Center</h3></div>
+          <p class="why">Location sharing is useful only if the person trusts it. Research on surveillance in care finds a tension between safety and autonomy, and PWID describe restriction as harmful.<a class="cite" href="#src-12">[12]</a><a class="cite" href="#src-11">[11]</a></p>
+          <p><strong>What it does.</strong> One screen that answers two questions: what is shared now, and when will it stop? It uses three choices, a plain-language preview, and a sign-out section. The caregiver cannot change it from their screen.</p>
           <ol>
-            <li><strong>Trip only:</strong> share while a trip is active. Stop at arrival. This is the default.</li>
-            <li><strong>Location always:</strong> share until I turn it off. Clear badge on the home screen.</li>
-            <li><strong>History:</strong> off by default. The caregiver sees the current trip, not everywhere the person has been.</li>
-            <li><strong>Pause:</strong> one tap. The caregiver sees “Sharing paused by Ryan”, not a blank map.</li>
+            <li><strong>This trip only:</strong> share while a trip is active. This is the default.</li>
+            <li><strong>Always:</strong> share until the person turns it off. The header shows the state.</li>
+            <li><strong>Paused:</strong> the app stops sharing and the header shows Paused. The native background task stop path is still open.</li>
+            <li><strong>Preview and sign out:</strong> the person sees the current state and can sign out of this phone.</li>
           </ol>
         </div>
         <div class="feature-side">
           <dl>
-            <dt>Effort</dt><dd>Small to medium. Mostly UI and data rules.</dd>
+            <dt>Effort</dt><dd>Small to medium; core shipped. No history control, viewer list, or supported-decision record.</dd>
             <dt>Evidence</dt><dd>Surveillance ethics; supported decision-making; visible consent.<a class="cite" href="#src-12">[12]</a><a class="cite" href="#src-11">[11]</a><a class="cite" href="#src-16">[16]</a></dd>
             <dt>Risk</dt><dd>Too many choices. Mitigation: three presets, one sentence each, caregiver cannot change without the person seeing it.</dd>
             <dt>Success signal</dt><dd>People can explain what is shared. Pause is used without conflict. Fewer people turn sharing off entirely.</dd>
@@ -1172,7 +1183,7 @@
       </article>
 
       <div class="callout green">
-        <p><strong>Sequencing matters.</strong> Guided Trip Mode and the Help Card need the trip model and offline cache. Easy Read and Read Aloud touch every screen, so do them early and reuse the copy deck. Privacy Center is small but it protects trust, so do not leave it for the end.</p>
+        <p><strong>Sequencing matters.</strong> The trip model and Help Card are shipped, but offline cache is not. Do that before adding live bus data. Easy Read and Read Aloud still need to reach the remaining screens. Privacy Center is small but it protects trust, so keep it in the core release.</p>
       </div>
     </div>
   </section>
@@ -1180,7 +1191,11 @@
     <div class="wrap">
       <div class="section-head">
         <div><div class="section-num">07 / Mockups</div><h2>What it could feel like</h2></div>
-        <p>Seven screens for the traveller and the caregiver. Click the tabs, tap the buttons, try the help card, and use “Hear this” to listen. The mockup is illustrative. It is not the final visual design.</p>
+        <p>Seven screens from the design work. The shipped app keeps the same structure. Click the tabs, tap the buttons, try the help card, and use “Hear this” to listen. Buttons that are not in this build are called out in the notes.</p>
+      </div>
+
+      <div class="callout">
+        <p><strong>Shipped vs design target.</strong> The phone mockup is the design target, not a screenshot. The shipped app has the trip, help, privacy, and journey screens. It does not have bottom navigation, caregiver ETA, voice notes, SMS, or a live bus feed. The notes below say which is which.</p>
       </div>
 
       <div class="phone-stage">
@@ -1203,17 +1218,17 @@
                 <!-- HOME -->
                 <section class="screen active" data-screen="home" aria-label="Traveller home screen">
                   <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-                    <span class="tiny">Tuesday, 4 Nov</span>
-                    <span class="status-pill">Sharing: trip only</span>
+                    <span class="tiny">EasyBoard</span>
+                    <span class="status-pill">Trip only</span>
                   </div>
-                  <h4>Hello, Ryan</h4>
-                  <p>Where are you going?</p>
+                  <h4>Hello, Ryan.</h4>
+                  <p>Where do you want to go?</p>
 
                   <button class="place-card" type="button" data-goto="story">
                     <span class="thumb" aria-hidden="true">
                       <svg viewBox="0 0 80 60"><rect width="80" height="60" fill="#cfe3fa"/><rect x="8" y="30" width="64" height="26" fill="#e9dcc7"/><rect x="14" y="14" width="52" height="18" rx="2" fill="#fffdf8"/><path d="M18 32h44M18 38h30" stroke="#9aa9bb" stroke-width="2"/><circle cx="24" cy="48" r="4" fill="#1d5bb8"/><circle cx="56" cy="48" r="4" fill="#1d5bb8"/><path d="M30 48h20" stroke="#1d5bb8" stroke-width="3"/></svg>
                     </span>
-                    <span><b>Work</b><span>Blue Library · 25 min</span></span>
+                    <span><b>Work</b><span>Blue Library</span></span>
                     <span aria-hidden="true">›</span>
                   </button>
 
@@ -1221,28 +1236,21 @@
                     <span class="thumb" aria-hidden="true">
                       <svg viewBox="0 0 80 60"><rect width="80" height="60" fill="#f3e8d4"/><rect x="10" y="22" width="60" height="30" fill="#fffdf8"/><path d="M6 24l34-16 34 16" fill="#d9c7a8"/><rect x="34" y="34" width="12" height="18" fill="#1d5bb8"/><rect x="18" y="30" width="10" height="8" fill="#cfe3fa"/><rect x="52" y="30" width="10" height="8" fill="#cfe3fa"/></svg>
                     </span>
-                    <span><b>Home</b><span>12 min</span></span>
-                    <span aria-hidden="true">›</span>
-                  </button>
-
-                  <button class="place-card" type="button" data-goto="story">
-                    <span class="thumb" aria-hidden="true" style="display:grid;place-items:center;background:#e8eef8;color:#1d5bb8;font-size:26px;font-weight:900">+</span>
-                    <span><b>Other place</b><span>Ask someone to help me choose</span></span>
+                    <span><b>Home</b><span>Saved place</span></span>
                     <span aria-hidden="true">›</span>
                   </button>
 
                   <button class="pbtn help" type="button" data-goto="help">I need help</button>
-                  <button class="pbtn secondary" type="button" data-goto="privacy">What Mei Leng can see</button>
-                  <p style="margin-top:10px;font-size:10px">Last trip: Home to Work · arrived 8:42 am</p>
+                  <p style="margin-top:10px;font-size:10px">Sharing changes are in the header.</p>
                 </section>
 
                 <!-- STORY -->
                 <section class="screen" data-screen="story" aria-label="Trip story screen">
                   <div style="display:flex;align-items:center;gap:8px">
                     <button class="pbtn ghost" type="button" data-goto="home" style="width:36px;padding:6px;margin:0" aria-label="Back">←</button>
-                    <div><span class="tiny">Your trip</span><h4 style="margin:0">Home to Work</h4></div>
+                    <div><span class="tiny">Your trip</span><h4 style="margin:0">To Work</h4></div>
                   </div>
-                  <p>8 steps · about 25 minutes</p>
+                  <p>8 steps · bus 2</p>
 
                   <div class="big-photo">
                     <svg viewBox="0 0 300 150" aria-hidden="true"><rect width="300" height="150" fill="#d9e8f7"/><rect x="0" y="104" width="300" height="46" fill="#c9c3b6"/><rect x="26" y="52" width="10" height="70" fill="#4b5563"/><rect x="14" y="44" width="34" height="18" rx="4" fill="#1d5bb8"/><text x="22" y="57" fill="#fff" font-size="9" font-family="sans-serif">BUS 2</text><rect x="120" y="40" width="130" height="56" rx="8" fill="#fffdf8"/><path d="M132 96V78h106v18M144 78V64h28v14M184 78V64h28v14" stroke="#1d5bb8" stroke-width="4" fill="none"/><circle cx="142" cy="102" r="10" fill="#1d2430"/><circle cx="222" cy="102" r="10" fill="#1d2430"/><rect x="0" y="120" width="300" height="6" fill="#a8a196"/></svg>
@@ -1261,17 +1269,17 @@
                   </div>
 
                   <button class="pbtn" type="button" data-goto="step">Start trip</button>
-                  <button class="pbtn secondary" type="button" data-demo-toast="Practice mode would replay this story.">Practice this trip</button>
+                  <button class="pbtn secondary" type="button" data-demo-toast="In the app, this runs the same steps without sharing or publishing a trip.">Practice this trip</button>
                 </section>
 
                 <!-- STEP -->
                 <section class="screen" data-screen="step" aria-label="Guided trip step screen">
                   <div style="display:flex;justify-content:space-between;align-items:center">
-                    <span class="tiny">Step 3 of 8</span>
+                    <span class="tiny">Step 2 of 8</span>
                     <button class="pbtn ghost" type="button" data-goto="home" style="width:36px;padding:6px;margin:0" aria-label="Close trip">✕</button>
                   </div>
                   <div class="step-count" aria-hidden="true">
-                    <span class="dot done"></span><span class="dot done"></span><span class="dot now"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                    <span class="dot done"></span><span class="dot now"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
                   </div>
 
                   <div class="big-photo">
@@ -1284,7 +1292,6 @@
 
                   <div class="audio-row">
                     <button class="audio-btn" type="button" data-speak="Wait for bus 2. Stand near the blue sign. When the bus stops, the door will open.">🔊 Hear this</button>
-                    <button class="audio-btn" type="button" data-speak="Mei Leng says: wait near the blue sign. When bus 2 stops, get on.">▶ Mei Leng</button>
                   </div>
 
                   <button class="pbtn" type="button" data-goto="board">The bus has stopped</button>
@@ -1297,12 +1304,12 @@
                   <div style="display:flex;justify-content:space-between;align-items:center">
                     <div style="display:flex;align-items:center;gap:8px">
                       <button class="pbtn ghost" type="button" data-goto="step" style="width:36px;padding:6px;margin:0" aria-label="Back to waiting">←</button>
-                      <span class="tiny">Step 4 of 8</span>
+                      <span class="tiny">Step 3 of 8</span>
                     </div>
                     <button class="pbtn ghost" type="button" data-goto="home" style="width:36px;padding:6px;margin:0" aria-label="Close trip">✕</button>
                   </div>
                   <div class="step-count" aria-hidden="true">
-                    <span class="dot done"></span><span class="dot done"></span><span class="dot done"></span><span class="dot now"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                    <span class="dot done"></span><span class="dot done"></span><span class="dot now"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
                   </div>
 
                   <div class="big-photo" style="height:120px">
@@ -1315,15 +1322,11 @@
 
                   <div class="audio-row">
                     <button class="audio-btn" type="button" data-speak="The bus has stopped. The door is open. Get on bus 2.">🔊 Hear this</button>
-                    <button class="audio-btn" type="button" data-speak="Mei Leng says: get on bus 2. Hold your card in front of your chest so the driver sees you.">▶ Mei Leng</button>
                   </div>
 
-                  <button class="pbtn" type="button" data-demo-toast="Next: tap your card. Then sit near the driver.">I am on the bus</button>
-                  <button class="pbtn secondary" type="button" data-demo-toast="Ask the driver: “Does this bus go to Blue Library?”">Is this my bus?</button>
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-                    <button class="pbtn secondary" type="button" data-goto="help" style="margin-top:8px">I need help</button>
-                    <button class="pbtn ghost" type="button" data-demo-toast="Wait for the next bus 2. It will come in 8 minutes." style="margin-top:8px">Next bus</button>
-                  </div>
+                  <button class="pbtn" type="button" data-demo-toast="In the app, this moves to the card tap.">I am on the bus</button>
+                  <button class="pbtn secondary" type="button" data-demo-toast="The app shows: Ask the driver: “Does this bus go to Blue Library?”">Is this my bus?</button>
+                  <button class="pbtn ghost" type="button" data-goto="help" style="margin-top:8px">I’m not sure</button>
                 </section>
 
                 <!-- HELP -->
@@ -1332,7 +1335,7 @@
                     <h4 style="margin:0">I need help</h4>
                     <button class="pbtn ghost" type="button" data-goto="back" style="width:36px;padding:6px;margin:0" aria-label="Close help">✕</button>
                   </div>
-                  <p>Show this card to someone. They can call Mei Leng.</p>
+                  <p>Show this card to someone. They can call your caregiver.</p>
 
                   <div class="helpcard">
                     <div class="tiny">HELP CARD</div>
@@ -1342,93 +1345,68 @@
                     <div style="font-size:26px;font-weight:900;color:#a1282e;margin-top:4px">9123 4567</div>
                   </div>
 
-                  <button class="pbtn" type="button" data-call="9123 4567">Call Mei Leng</button>
+                  <button class="pbtn" type="button" data-call="9123 4567">Call caregiver</button>
                   <button class="pbtn secondary" type="button" data-fullscreen-help>Show this to someone</button>
-                  <button class="pbtn secondary" type="button" data-demo-toast="Location sent to Mei Leng. SMS fallback ready.">Send my location</button>
-                  <p style="margin-top:10px;font-size:10px">This card works without internet. Emergency: <b>999</b></p>
+                  <p style="margin-top:10px;font-size:10px">Works while this app is open. Emergency: <b>999</b></p>
                 </section>
 
                 <!-- CAREGIVER -->
-                <section class="screen" data-screen="caregiver" aria-label="Caregiver trip card">
+                <section class="screen" data-screen="caregiver" aria-label="Caregiver people card">
                   <div style="display:flex;justify-content:space-between;align-items:center">
-                    <div><span class="tiny">Caregiver</span><h4 style="margin:0">Ryan</h4></div>
-                    <span class="status-pill" style="background:#fbf0dc;color:#8a5300">Waiting to board</span>
+                    <div><span class="tiny">Caregiver</span><h4 style="margin:0">People you support</h4></div>
+                    <span class="status-pill">Sharing</span>
                   </div>
-                  <p>Tuesday, 4 Nov · 9:12 am</p>
+                  <p>Ryan · updated 9:12</p>
 
                   <div class="place-card" style="grid-template-columns:1fr auto;cursor:default">
-                    <div><b style="font-size:16px">Bus 2 is here</b><span>Door open · 45 seconds ago</span></div>
-                    <div style="text-align:right"><b style="font-size:18px">9:37</b><span>arrival</span></div>
+                    <div><b style="font-size:16px">Waiting at the stop</b><span>Bus 2 · boarding check after 45s</span></div>
+                    <div style="text-align:right"><b style="font-size:18px">9:12</b><span>updated</span></div>
                   </div>
 
                   <div class="timeline" style="margin-top:8px">
-                    <div class="titem"><b>Walked to the bus stop</b><span>9:02 am</span></div>
-                    <div class="titem"><b>Bus 2 arrived</b><span>9:11 am</span></div>
-                    <div class="titem"><b>Waiting to board</b><span>No confirmation yet</span></div>
+                    <div class="titem"><b>Waiting at the stop</b><span>No boarding confirmation yet</span></div>
                   </div>
 
                   <div class="callout-small" style="margin-top:0">
-                    <b>Ryan has not boarded yet.</b><br>
-                    Bus 2 is at the stop. The door is open. He may need a prompt.
+                    <b>No boarding confirmation yet.</b><br>
+                    This check appears after 45 seconds at the stop, not when a bus arrives. There is no ETA.
                   </div>
 
                   <button class="pbtn" type="button" data-call="Ryan">Call Ryan</button>
-                  <button class="pbtn secondary" type="button" data-demo-toast="Voice note sent: “Get on bus 2. The door is open.”">Send voice note</button>
-                  <p style="margin-top:8px;font-size:10px">Location shared for this trip only.</p>
+                  <button class="pbtn secondary" type="button" data-demo-toast="Location is shared for this trip only.">Location</button>
+                  <p style="margin-top:8px;font-size:10px">Location shared while Ryan is sharing.</p>
                 </section>
 
                 <!-- PRIVACY -->
                 <section class="screen" data-screen="privacy" aria-label="Privacy settings">
                   <div style="display:flex;justify-content:space-between;align-items:center">
-                    <h4 style="margin:0">What Mei Leng can see</h4>
+                    <h4 style="margin:0">What you share</h4>
                     <button class="pbtn ghost" type="button" data-goto="home" style="width:36px;padding:6px;margin:0" aria-label="Close privacy">✕</button>
                   </div>
-                  <p>You choose. You can change this anytime.</p>
+                  <p>Only you can change it.</p>
 
                   <div class="toggle-row">
-                    <div><b>My trip</b><span>Only while I travel</span></div>
-                    <button class="switch" type="button" role="switch" aria-checked="true" aria-label="Share my trip"></button>
+                    <div><b>This trip only</b><span>While a trip is active</span></div>
+                    <button class="switch" type="button" role="switch" aria-checked="true" aria-label="Share this trip only"></button>
                   </div>
                   <div class="toggle-row">
-                    <div><b>My location all the time</b><span>Not needed for most trips</span></div>
-                    <button class="switch off" type="button" role="switch" aria-checked="false" aria-label="Share my location all the time"></button>
-                  </div>
-                  <div class="toggle-row">
-                    <div><b>My trip history</b><span>Mei Leng cannot see past trips</span></div>
-                    <button class="switch off" type="button" role="switch" aria-checked="false" aria-label="Share my trip history"></button>
+                    <div><b>Always</b><span>Until you turn it off</span></div>
+                    <button class="switch off" type="button" role="switch" aria-checked="false" aria-label="Share always"></button>
                   </div>
                   <div class="toggle-row" style="border-bottom:0">
-                    <div><b>Mei Leng can call me</b><span>Always allowed</span></div>
-                    <button class="switch" type="button" role="switch" aria-checked="true" aria-label="Allow caregiver calls"></button>
+                    <div><b>Paused</b><span>Nothing is shared</span></div>
+                    <button class="switch off" type="button" role="switch" aria-checked="false" aria-label="Pause sharing"></button>
                   </div>
 
-                  <button class="pbtn secondary" type="button" data-demo-toast="Sharing paused. Mei Leng can see that you paused.">Pause sharing</button>
-                  <p style="margin-top:10px;font-size:10px">Mei Leng cannot change this without you. <a href="#flows" style="color:#1d4f9c">See how it works.</a></p>
+                  <div class="callout-small" style="margin-top:8px">
+                    <b>Sharing this trip</b><br>
+                    Work · Waiting at the stop
+                  </div>
+
+                  <button class="pbtn secondary" type="button" data-demo-toast="Sharing paused. Your caregiver sees Paused.">Pause sharing</button>
+                  <p style="margin-top:10px;font-size:10px">One choice at a time. The shipped screen uses radio choices, a preview, and a separate sign-out.</p>
                 </section>
 
-              </div>
-              <div class="bottombar pwid-tabs">
-                <button class="tabbtn active" type="button" data-goto="home" aria-label="Home">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
-                  Home
-                </button>
-                <button class="tabbtn" type="button" data-goto="story" aria-label="My trips">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
-                  Trips
-                </button>
-                <button class="tabbtn" type="button" data-goto="help" aria-label="Help">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1 1-1.1 1.8"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/></svg>
-                  Help
-                </button>
-                <button class="tabbtn" type="button" data-goto="privacy" aria-label="Me and privacy">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c1.5-4 4-6 7-6s5.5 2 7 6"/></svg>
-                  Me
-                </button>
-              </div>
-              <div class="bottombar cg-tabs" hidden>
-                <button class="tabbtn active" type="button" data-goto="caregiver">Dashboard</button>
-                <button class="tabbtn" type="button" data-demo-toast="2 alerts today: one help request, one arrival.">Alerts</button>
-                <button class="tabbtn" type="button" data-goto="privacy">Settings</button>
               </div>
 
               <div class="help-overlay" id="helpOverlay" role="dialog" aria-modal="true" aria-label="Help card for Ryan" hidden style="position:absolute;inset:0;background:#fffdf8;z-index:20;padding:28px 18px;display:none;flex-direction:column;justify-content:center;text-align:center">
@@ -1453,13 +1431,13 @@
         <div class="mock-notes">
           <h3 style="margin-top:0">Why each screen looks like this</h3>
 
-          <div class="note"><div class="note-num">1</div><div><b>Home: two places, one help button.</b><span>The current home is close to this. The change is the status pill (“Sharing: trip only”) and “Ask someone to help me choose” for people who cannot read a map. The help button is a primary action.</span></div></div>
-          <div class="note"><div class="note-num">2</div><div><b>Trip story: the route as a sequence of places.</b><span>Photos of the actual stop and gate do more than a route line. Five to eight steps is enough. The story includes the open door, the card tap, and the seat, so boarding is rehearsed. The caregiver can record a voice note for any step. “Practice this trip” links rehearsal to the live trip.</span></div></div>
-          <div class="note"><div class="note-num">3</div><div><b>Wait: one instruction, one action.</b><span>“Wait for bus 2” is the whole screen. The audio button reads it. The copy teaches the cue: when the bus stops, the door will open. “The bus has stopped” moves to the boarding screen. “I’m not sure” is always visible, so uncertainty does not become a freeze.</span></div></div>
-          <div class="note"><div class="note-num">4</div><div><b>Board: the step after seeing the bus.</b><span>The screen names the action, shows the open door, and asks for confirmation. “I am on the bus” is the signal the app needs. If it does not come, the caregiver sees a boarding alert. “Is this my bus?” gives the person a script for the driver. “Next bus” gives the next step, so a missed bus is not a dead end.</span></div></div>
-          <div class="note"><div class="note-num">5</div><div><b>Help card: usable by a stranger.</b><span>The card leads with the person, then the destination, then the caregiver’s number. “Show this to someone” makes the text huge. It works offline. Emergency 999 is separate and clearly labelled.</span></div></div>
-          <div class="note"><div class="note-num">6</div><div><b>Caregiver: a boarding alert, not just a dot.</b><span>The caregiver sees “Bus 2 is here. Door open. No confirmation yet.” The voice note is a prompt, not a takeover. Location is shared for this trip only, and the card says so.</span></div></div>
-          <div class="note"><div class="note-num">7</div><div><b>Privacy: three choices, one pause.</b><span>The person sees exactly what the caregiver sees. “Trip only” is the default. History is off. The caregiver cannot change it silently. Pause is a normal action.</span></div></div>
+          <div class="note"><div class="note-num">1</div><div><b>Home: saved places and one help button.</b><span>Shipped. The home shows saved place cards and journey destinations, an active trip card when one exists, and “I need help”. Sharing state is in the header. The shipped app does not have “Other place”, recent trips, or bottom navigation.</span></div></div>
+          <div class="note"><div class="note-num">2</div><div><b>Trip story: the route as a sequence of places.</b><span>Shipped. The timeline uses the caregiver’s journey steps and photos when they exist, otherwise a default eight-step story. The person can start or practise. Per-step voice notes and a quiz are not in this build.</span></div></div>
+          <div class="note"><div class="note-num">3</div><div><b>Wait: one instruction, one action.</b><span>Shipped. “Wait for bus 2” is the whole screen. The read-aloud control reads it. The shipped active step uses a scene illustration; the mockup shows a photo. “The bus has stopped” opens the boarding screen. “I’m not sure” opens the Help Card. There is no caregiver voice button.</span></div></div>
+          <div class="note"><div class="note-num">4</div><div><b>Board: the step after seeing the bus.</b><span>Shipped. The screen names the action and asks for confirmation. “I am on the bus” moves to the card tap. “Is this my bus?” opens a driver script. The caregiver boarding check is a 45-second timer at the waiting stage; the app does not know a bus arrived.</span></div></div>
+          <div class="note"><div class="note-num">5</div><div><b>Help card: usable by a stranger.</b><span>Shipped. The card leads with the person, then the destination, then the caregiver’s number. “Show this to someone” makes the text huge. It works only while the app is open. Emergency 999 is separate. SMS and “send location” are not in this build.</span></div></div>
+          <div class="note"><div class="note-num">6</div><div><b>Caregiver: a people card, not just a dot.</b><span>Shipped core. The caregiver sees stage, last update, sharing state, call, and location or journey setup. The boarding check appears after 45 seconds at the stop. There is no ETA, push alert, or voice note.</span></div></div>
+          <div class="note"><div class="note-num">7</div><div><b>Privacy: three choices, one pause.</b><span>Shipped core. The person chooses this trip only, always, or paused, sees a preview, and can sign out. There is no history toggle or allow-calls toggle. The caregiver cannot change it silently.</span></div></div>
         </div>
       </div>
 
@@ -1484,13 +1462,13 @@
 
         <div class="flow-panel" data-flow-panel="trip">
           <div class="flow-row" role="group" aria-label="Trip flow steps">
-            <button class="flow-node" type="button" data-detail-title="1. Choose a place" data-detail="The person picks a photo card: Work, Home, School, or a recent trip. If they cannot choose, “Ask someone to help me choose” starts a caregiver call. No map is shown here."><b>Choose a place</b><span>Photo card, not an address</span></button>
-            <button class="flow-node" type="button" data-detail-title="2. See the story" data-detail="The app shows 5 to 8 steps with photos. The person can swipe through, hear each step, or start. The caregiver can add a voice note. This is the rehearsal layer."><b>See the story</b><span>5 to 8 photo steps</span></button>
-            <button class="flow-node" type="button" data-detail-title="3. Ready check" data-detail="Three checks: fare card, phone battery above 20%, and headphones or sound on. If a check fails, the app offers a fix or a caregiver call. The person can still start the trip."><b>Ready check</b><span>Fare, battery, sound</span></button>
-            <button class="flow-node" type="button" data-detail-title="4. Board the bus" data-detail="When the bus stops and the door opens, show “Get on bus 2.” Ask “Are you on the bus?” A confirmation moves the trip forward. No confirmation after 45 seconds triggers a gentle prompt and a caregiver alert. The app never treats “I see the bus” as boarding."><b>Board the bus</b><span>Door open, get on, confirm</span></button>
-            <button class="flow-node" type="button" data-detail-title="5. Ride and get off" data-detail="Count the stops, show landmarks, prompt the bell, and prepare to exit. Keep the help button visible. If the person misses the stop, say “Stay on the bus. We will call you.”"><b>Ride and get off</b><span>Count stops, ring the bell</span></button>
-            <button class="flow-node" type="button" data-detail-title="6. Handle a change" data-detail="Delay, missed stop, or off-route triggers one calm sentence and one action. The caregiver is alerted only when the person asks, does not answer, or the app is confident something is wrong."><b>Handle a change</b><span>Calm alert, one action</span></button>
-            <button class="flow-node" type="button" data-detail-title="7. Arrive" data-detail="The app shows the destination photo: “You are here.” Sharing stops automatically if it is trip-only. The caregiver gets an arrival notification. The person can rate the trip with three faces."><b>Arrive</b><span>Photo, stop sharing, notify</span></button>
+            <button class="flow-node" type="button" data-detail-title="1. Choose a place" data-detail="The person picks a saved place or journey destination. There is no map picker and no “Ask someone to help me choose” in this build. A caregiver adds places during onboarding or journey setup."><b>Choose a place</b><span>Saved place, not an address</span></button>
+            <button class="flow-node" type="button" data-detail-title="2. See the story" data-detail="The app shows up to eight steps. Caregiver photos appear when they exist; otherwise the step uses a scene illustration. The person can read or hear the step and start or practise. There is no per-step voice note."><b>See the story</b><span>Up to 8 steps</span></button>
+            <button class="flow-node" type="button" data-detail-title="3. Ready check" data-detail="Three checks: fare card, phone battery, and headphones or sound on. They are reminders, not gates. The person can start even if a box is empty; the app does not fix the problem for them."><b>Ready check</b><span>Checks do not block</span></button>
+            <button class="flow-node" type="button" data-detail-title="4. Board the bus" data-detail="Manual. “The bus has stopped” opens “Get on bus 2”. “I am on the bus” moves to the card tap. The caregiver sees a boarding check after 45 seconds at the waiting stage. The app has no live bus or geofence signal."><b>Board the bus</b><span>Manual confirmation</span></button>
+            <button class="flow-node" type="button" data-detail-title="5. Ride and get off" data-detail="The ride card says “Sit near the driver” and “Ride 8 stops”. The person advances when they see the stop. “I missed my stop” says stay on the bus and offers a caregiver call. The app does not count stops automatically."><b>Ride and get off</b><span>Manual, with recovery</span></button>
+            <button class="flow-node" type="button" data-detail-title="6. Handle a change" data-detail="Only two change paths are live: the bus did not stop, and the person missed the stop. There is no live delay, route change, off-route, or no-movement alert. The caregiver boarding check is a timer, not a bus signal."><b>Handle a change</b><span>Missed bus and stop</span></button>
+            <button class="flow-node" type="button" data-detail-title="7. Arrive" data-detail="The app shows “You are here.” Sharing stops at the arrived stage. Tapping Done clears the local trip and the Firebase active trip. The caregiver sees the arrived stage through the trip card. There is no push notification and no trip rating."><b>Arrive</b><span>Stop sharing, clear trip</span></button>
           </div>
           <p style="font-size:.8rem;color:var(--muted);margin:0 0 10px">Scroll sideways to see all seven steps.</p>
           <div class="flow-detail" id="flowDetail" aria-live="polite">
@@ -1501,27 +1479,25 @@
 
         <div class="flow-panel" data-flow-panel="help" hidden>
           <div class="flow-vertical" role="group" aria-label="Help flow steps">
-            <button class="flow-node" type="button" data-detail-title="1. Ask for help" data-detail="The entry point is always visible: on the home screen and on every step. It does not require reading a menu. The button says “I need help”, not “Support”."><b>1. Ask for help</b><span>One tap, always visible</span></button>
-            <button class="flow-node" type="button" data-detail-title="2. Ask one safety question" data-detail="“Are you safe right now?” with two large buttons: “Yes” and “No”. If No, the app goes straight to a call and shares location. It does not ask the person to explain."><b>2. Are you safe?</b><span>Yes / No, no typing</span></button>
-            <button class="flow-node" type="button" data-detail-title="3. Choose a way to get help" data-detail="Three options: call the caregiver, show the help card to someone nearby, or send location by SMS. The options are picture-led. The person can use one, then another."><b>3. Choose how</b><span>Call, show card, send location</span></button>
-            <button class="flow-node" type="button" data-detail-title="4. Caregiver answers?" data-detail="If the caregiver answers, the app shows “Mei Leng is on the phone” and keeps the card open. If there is no answer in 30 seconds, the app offers the second contact and a staff member or stranger card."><b>4. Caregiver answers?</b><span>30-second timeout</span></button>
-            <button class="flow-node" type="button" data-detail-title="5. Escalate" data-detail="Second contact, then a nearby staff member, then emergency services. The app never dials 999 automatically. It shows a big 999 button and a script: “I need help. I am at [place].”"><b>5. Escalate</b><span>Second contact, staff, 999</span></button>
-            <button class="flow-node" type="button" data-detail-title="6. Close the loop" data-detail="When the person is safe, the caregiver marks the alert resolved. The person sees “Mei Leng knows where you are.” The event is logged for review, not for surveillance."><b>6. Close the loop</b><span>Confirm help arrived</span></button>
+            <button class="flow-node" type="button" data-detail-title="1. Ask for help" data-detail="The entry point is visible on the home screen and on every trip step. It says “I need help”, not “Support”, and opens the card directly. There is no safety question first."><b>1. Ask for help</b><span>One tap, visible</span></button>
+            <button class="flow-node" type="button" data-detail-title="2. Show the card" data-detail="The card shows the person’s name, destination, a location sentence, caregiver name and number, and a driver script. The person can call or hand the phone over. There is no SMS or “send location” action."><b>2. Show the card</b><span>Name, place, number</span></button>
+            <button class="flow-node" type="button" data-detail-title="3. Make it bigger" data-detail="“Show this to someone” removes the normal page chrome and enlarges the text. The caregiver number stays visible. The 999 link sits at the bottom, separate from the caregiver call."><b>3. Show a stranger</b><span>Full-screen card</span></button>
+            <button class="flow-node" type="button" data-detail-title="4. If no one answers" data-detail="There is no second contact or timed escalation. The person can call again or use 999. The card says “Works while this app is open”; it does not promise offline use."><b>4. If no answer</b><span>Call again or 999</span></button>
           </div>
           <div class="flow-detail" aria-live="polite">
             <strong>Click a step</strong>
-            <p>The help flow must work with one hand, no speech, and no data.</p>
+            <p>The shipped help flow works with one hand and no speech. SMS, second contact, and offline use are not in this build.</p>
           </div>
         </div>
 
         <div class="flow-panel" data-flow-panel="consent" hidden>
           <div class="flow-row" role="group" aria-label="Consent flow steps">
-            <button class="flow-node" type="button" data-detail-title="1. Who helps you?" data-detail="On first setup, the person names their caregiver and chooses how that person can help: call only, see my trips, or see my location all the time. The caregiver is present for this step if possible."><b>Who helps you?</b><span>Name and role</span></button>
-            <button class="flow-node" type="button" data-detail-title="2. Choose a preset" data-detail="Three presets, one sentence each. “Trip only” is the default. The person can change it later without asking the caregiver. The choice is saved to the account, not the device."><b>Choose a preset</b><span>Trip only by default</span></button>
-            <button class="flow-node" type="button" data-detail-title="3. See what they see" data-detail="A preview of the caregiver’s screen, in the person’s hand. “This is what Mei Leng sees.” If the person is surprised, the preset is wrong."><b>See what they see</b><span>Preview the caregiver view</span></button>
-            <button class="flow-node" type="button" data-detail-title="4. Start a trip" data-detail="A visible badge appears: “Sharing with Mei Leng · this trip.” The badge is tappable and opens the Privacy Center. The person can pause at any time."><b>Start a trip</b><span>Visible sharing badge</span></button>
-            <button class="flow-node" type="button" data-detail-title="5. Arrive and stop" data-detail="Sharing stops at arrival. The caregiver sees “Arrived at 9:37 am.” The app does not keep a history unless the person chose history."><b>Arrive and stop</b><span>Sharing ends</span></button>
-            <button class="flow-node" type="button" data-detail-title="6. Review anytime" data-detail="The Privacy Center is one tap from home. It shows who can see what, why, and how to pause. The caregiver cannot change the setting silently; they can request a change, and the person approves or declines."><b>Review anytime</b><span>Pause or change</span></button>
+            <button class="flow-node" type="button" data-detail-title="1. Who helps you?" data-detail="Onboarding collects the caregiver’s phone number and saved places. It does not offer role choices such as “call only” or “see trips”. The linked caregiver appears on their own home."><b>Who helps you?</b><span>Caregiver phone</span></button>
+            <button class="flow-node" type="button" data-detail-title="2. Choose a preset" data-detail="The Privacy screen offers three presets: this trip only, always, and paused. Trip only is the default. The choice is saved on the device, while the active trip syncs through Firebase."><b>Choose a preset</b><span>Trip only by default</span></button>
+            <button class="flow-node" type="button" data-detail-title="3. See what is shared" data-detail="The preview shows the current state and, during a trip, the destination and stage. It does not show a full mock of the caregiver’s screen. The header badge opens the same privacy screen."><b>See what is shared</b><span>State and stage preview</span></button>
+            <button class="flow-node" type="button" data-detail-title="4. Start a trip" data-detail="Starting a trip clears practice mode and turns on sharing unless the mode is paused. The header shows “Sharing this trip” or “Sharing off”. The person can open privacy and pause at any time."><b>Start a trip</b><span>Header sharing state</span></button>
+            <button class="flow-node" type="button" data-detail-title="5. Arrive and stop" data-detail="Sharing stops when the trip reaches the arrived stage. The caregiver’s active trip card shows the arrived stage. The app does not keep a trip history. Auto-stop by destination distance is not wired."><b>Arrive and stop</b><span>Sharing ends</span></button>
+            <button class="flow-node" type="button" data-detail-title="6. Review anytime" data-detail="The Privacy screen is one tap from the header. It shows the current state and a sign-out section. The caregiver cannot change the setting. There is no history control or caregiver request flow."><b>Review anytime</b><span>Pause or sign out</span></button>
           </div>
           <div class="flow-detail" aria-live="polite">
             <strong>Click a step</strong>
@@ -1531,68 +1507,61 @@
       </div>
 
       <div class="grid-3" style="margin-top:22px">
-        <div class="card"><h3>Trip flow rules</h3><ul><li>Never show more than one primary action.</li><li>Keep the help button visible on every step.</li><li>Cache the route before the trip starts.</li><li>Let the person advance manually.</li><li>Boarding is a step. Do not assume seeing the bus means getting on.</li></ul></div>
-        <div class="card"><h3>Help flow rules</h3><ul><li>Ask “Are you safe?” before “What happened?”.</li><li>Use a 30-second timeout, not a silent failure.</li><li>Never auto-dial emergency services.</li><li>Keep the help card readable at arm’s length.</li></ul></div>
-        <div class="card"><h3>Consent flow rules</h3><ul><li>Trip-only sharing is the default.</li><li>Show the caregiver’s view to the person.</li><li>Pause is a normal action, not an exception.</li><li>No silent changes by the caregiver.</li></ul></div>
+        <div class="card"><h3>Trip flow rules</h3><ul><li>Never show more than one primary action.</li><li>Keep the help button visible on every step.</li><li>Let the person advance manually. The shipped app has no geofence.</li><li>Boarding is a step. Do not assume seeing the bus means getting on.</li><li>Cache the route before the trip starts. This is still next.</li></ul></div>
+        <div class="card"><h3>Help flow rules</h3><ul><li>Open the card in one tap.</li><li>Keep the caregiver number readable at arm’s length.</li><li>Never auto-dial emergency services.</li><li>Do not promise offline use until it is cached.</li><li>Second contact and SMS are still next.</li></ul></div>
+        <div class="card"><h3>Consent flow rules</h3><ul><li>Trip-only sharing is the default.</li><li>Show the current state and stage to the person.</li><li>Pause is a normal action, not an exception.</li><li>No silent changes by the caregiver.</li><li>History controls and a caregiver-view preview are still next.</li></ul></div>
       </div>
     </div>
   </section>
   <section class="section" id="build">
     <div class="wrap">
       <div class="section-head">
-        <div><div class="section-num">09 / Build</div><h2>How to make it real</h2></div>
-        <p>This is the practical layer: what to add to the app, what to change in the copy, and the acceptance criteria that stop accessibility from becoming a one-off cleanup.</p>
+        <div><div class="section-num">09 / Build</div><h2>How to make the next part real</h2></div>
+        <p>This is the practical layer: what is already in the build, what still needs work, and the acceptance criteria that stop accessibility from becoming a one-off cleanup.</p>
       </div>
 
-      <h3>Technical additions</h3>
+      <h3>What is in the shipped build</h3>
       <div class="callout green">
-        <p><strong>Library rule.</strong> Use <span class="mono">npx expo install</span> for Expo packages so versions match SDK 58. Do not hand-roll speech, audio, storage, SMS, geofencing, service workers, or the trip state machine. Native is the primary target. Some modules are native-only (<span class="mono">expo-secure-store</span>, <span class="mono">expo-file-system</span>). On web, use the documented browser fallback or hide the feature. Do not pretend a native-only module works on web.</p>
+        <p><strong>One added package: <span class="mono">expo-speech</span>.</strong> The rest uses the existing Expo and Firebase stack. Read aloud goes through <span class="mono">useReadAloud</span>. Photos use <span class="mono">expo-image-picker</span> and Firebase Storage. Trip state is a local <span class="mono">tripStore</span> plus the Firebase <span class="mono">activeTrip</span>. There is no XState, React Query, Workbox, geofence package, or offline cache in this build.</p>
       </div>
-      <pre class="mono" style="background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:14px;overflow:auto;font-size:.82rem;line-height:1.65">cd runtimes/app
-npx expo install expo-speech expo-audio expo-file-system \
-  expo-network expo-keep-awake expo-haptics \
-  @react-native-async-storage/async-storage
-yarn add xstate @xstate/react @tanstack/react-query zod
-yarn add -D workbox-build</pre>
-      <p style="font-size:.85rem;color:var(--muted);margin-top:8px">Run <span class="mono">npx expo install --check</span> after adding packages. Do not pin versions by hand.</p>
-      <p style="font-size:.85rem;color:var(--muted);margin-top:8px">Already installed and reused: <span class="mono">expo-image</span>, <span class="mono">expo-secure-store</span>, <span class="mono">expo-linking</span>, <span class="mono">expo-location</span>, <span class="mono">expo-task-manager</span>, <span class="mono">expo-notifications</span>, <span class="mono">react-native-reanimated</span>, <span class="mono">@expo/vector-icons</span>, <span class="mono">react-native-phone-call</span>, and <span class="mono">zustand</span>. Do not add duplicates.</p>
 
       <div class="callout green">
-        <p><strong>Firebase stays the backend.</strong> Firebase Auth, Realtime Database, Storage, Cloud Functions, and Cloud Messaging remain the backend and the source of truth for shared state. The libraries below are client-side helpers. XState models the local trip lifecycle and writes status to the Realtime Database; it does not replace the database. TanStack Query is only for external REST APIs such as LTA DataMall, not for Firebase subscriptions. AsyncStorage is an offline cache, not a backend. <span class="mono">expo-secure-store</span> holds local secrets, not the account.</p>
+        <p><strong>Firebase stays the backend.</strong> Auth, Realtime Database, Storage, Cloud Functions, and Cloud Messaging remain the source of truth for shared state. The active trip writes to <span class="mono">users/{phone}/activeTrip</span>; the caregiver subscribes to every linked person. Local storage is a cache, not the shared record.</p>
       </div>
 
       <table class="audit-table">
-        <caption class="sr-only">Technical additions for the proposed features, with the library to use</caption>
-        <thead><tr><th>Need</th><th>Use this library</th><th>Notes and what not to hand-roll</th></tr></thead>
+        <caption class="sr-only">Shipped technical pieces and the remaining gap</caption>
+        <thead><tr><th>Need</th><th>In the build</th><th>Still next</th></tr></thead>
         <tbody>
-          <tr><td>Read aloud</td><td><span class="mono">expo-speech</span> on native and web. It wraps the platform voices and the Web Speech API.</td><td>Wrap it in <span class="mono">src/services/speechService.ts</span>. Set language from the account. Let the caregiver record names that text-to-speech mispronounces. Do not generate audio files or add a cloud text-to-speech service for v1. Always show the text too.</td></tr>
-          <tr><td>Caregiver voice notes</td><td><span class="mono">expo-audio</span> for recording and playback on native and web. On native, record to the document directory with <span class="mono">directory: 'document'</span> or move the file with <span class="mono">expo-file-system</span>. Upload to Firebase Storage.</td><td>Do not use <span class="mono">expo-av</span>; it is deprecated. Do not write native audio code. Add the <span class="mono">expo-audio</span> config plugin with a plain-language microphone permission, and ask only when recording. Add a transcript and a 15-second limit. Never autoplay in public without headphones. Delete the audio when the route is deleted. On web, hide recording if you do not want to persist blobs.</td></tr>
-          <tr><td>Offline trip</td><td><span class="mono">@react-native-async-storage/async-storage</span> for trip JSON and help card text on native and web. <span class="mono">expo-image</span> for disk-cached step photos on native; the browser cache covers web. <span class="mono">expo-secure-store</span> on native for the caregiver number. <span class="mono">expo-network</span> for the offline badge.</td><td>Replace web-only <span class="mono">sessionStorage</span>. Do not hand-roll file storage or encryption. Native supports the offline help card; web needs a connection for the caregiver number, so do not put it in localStorage. Show a “Saved for offline” badge and test in airplane mode on both platforms.</td></tr>
-          <tr><td>Web offline</td><td><span class="mono">workbox-build</span> to generate the service worker from the exported web build.</td><td>Do not hand-write cache logic. Precache the app shell and trip JSON; use runtime caching for photos.</td></tr>
-          <tr><td>Step triggers</td><td><span class="mono">expo-location</span> geofences with <span class="mono">expo-task-manager</span>.</td><td>Do not poll location with <span class="mono">setInterval</span>. iOS limits monitored regions; eight steps fits. Fall back to a timer and a manual “I’m here” button. Always allow manual advance.</td></tr>
-          <tr><td>Live bus arrival (optional)</td><td>LTA DataMall Bus Arrival API through a Cloud Function. Fetch and poll with <span class="mono">@tanstack/react-query</span>; validate responses with <span class="mono">zod</span>.</td><td>Do not write custom polling loops or trust unvalidated JSON. If live data is unavailable, keep the manual “The bus has stopped” button.</td></tr>
-          <tr><td>SMS fallback</td><td><span class="mono">expo-linking</span> with an <span class="mono">sms:</span> URL on native. Use the existing <span class="mono">react-native-phone-call</span> or <span class="mono">expo-linking</span> <span class="mono">tel:</span> for calls.</td><td>The SMS composer opens with a prefilled message; the person taps send. Show “Message ready” and a call button. On web, show a call button instead. For automatic SMS, use Twilio through a Cloud Function with the person’s consent. Do not build an SMS gateway.</td></tr>
-          <tr><td>Screen stays awake</td><td><span class="mono">expo-keep-awake</span>.</td><td>No custom timers. Keep it to the help card, not the whole trip.</td></tr>
-          <tr><td>Haptics</td><td><span class="mono">expo-haptics</span>.</td><td>No custom native vibration modules. Keep it optional and short.</td></tr>
-          <tr><td>Reduced motion</td><td><span class="mono">useReducedMotion</span> from <span class="mono">react-native-reanimated</span>, plus the platform <span class="mono">AccessibilityInfo</span>.</td><td>Already installed. Do not write custom motion detection.</td></tr>
+          <tr><td>Read aloud</td><td><span class="mono">expo-speech</span> via <span class="mono">useReadAloud</span>; English (<span class="mono">en-SG</span>) on the trip story and active step.</td><td>Every screen, account language, caregiver name recording, and a speaking-rate control.</td></tr>
+          <tr><td>Photos</td><td><span class="mono">expo-image-picker</span> camera and library, Firebase Storage, and <span class="mono">expo-image</span> display.</td><td>Photo date, termly review, and an image on/off choice.</td></tr>
+          <tr><td>Trip state</td><td>Local <span class="mono">tripStore.ts</span> plus Firebase <span class="mono">activeTrip</span>; manual stage transitions.</td><td>Offline cache and stronger transition guards if the state machine grows.</td></tr>
+          <tr><td>Shared trip state</td><td>Firebase Realtime Database <span class="mono">users/{phone}/activeTrip</span>; caregiver subscriptions.</td><td>Push alerts, ETA, event history, and a resolved-alert state.</td></tr>
+          <tr><td>Location sharing</td><td>Native background location with <span class="mono">expo-location</span> and <span class="mono">expo-task-manager</span>; web <span class="mono">navigator.geolocation</span>; three privacy modes.</td><td>Destination auto-stop, reliable task cleanup, and offline behavior.</td></tr>
+          <tr><td>Help card</td><td>Local profile and route params; <span class="mono">Linking</span> <span class="mono">tel:</span>; full-screen mode; separate 999 link.</td><td>SMS, second contact, offline cache, and keep-awake.</td></tr>
+          <tr><td>Step triggers</td><td>None. Every step is manual.</td><td>Optional geofence with a manual “I’m here” fallback. Never geofence-only.</td></tr>
+          <tr><td>Live bus data</td><td>None. Manual “The bus has stopped” and a 45-second caregiver boarding check.</td><td>LTA DataMall or another live feed through a Cloud Function.</td></tr>
+          <tr><td>Offline</td><td>None. The help card says “Works while this app is open.”</td><td>AsyncStorage or secure store, a service worker for web, and an airplane-mode test.</td></tr>
+          <tr><td>Reduced motion</td><td>None.</td><td><span class="mono">useReducedMotion</span> or the platform setting.</td></tr>
         </tbody>
       </table>
 
-      <h3 style="margin-top:34px">Supporting libraries</h3>
+      <h3 style="margin-top:34px">Libraries that are still proposals</h3>
       <table class="audit-table">
-        <caption class="sr-only">Supporting libraries for state, data, language, and accessibility checks</caption>
-        <thead><tr><th>Need</th><th>Use this</th><th>Why</th></tr></thead>
+        <caption class="sr-only">Proposed libraries, not used in this build</caption>
+        <thead><tr><th>Need</th><th>Proposed tool</th><th>Why it is not in this build</th></tr></thead>
         <tbody>
-          <tr><td>Trip state</td><td><span class="mono">xstate</span> + <span class="mono">@xstate/react</span></td><td>Makes invalid transitions impossible, such as boarding before arrival or arrival before boarding. Keep Zustand (already installed) for auth and UI state.</td></tr>
-          <tr><td>Live data and caching</td><td><span class="mono">@tanstack/react-query</span> + <span class="mono">zod</span></td><td>Handles polling, retries, caching, and response validation. Wire Query’s <span class="mono">onlineManager</span> to <span class="mono">expo-network</span> so offline state is accurate. Do not write a custom fetch loop.</td></tr>
-          <tr><td>Language</td><td><span class="mono">expo-localization</span> + <span class="mono">i18next</span> + <span class="mono">react-i18next</span></td><td>Only if shipping more than English. Do not hand-roll a translation map.</td></tr>
-          <tr><td>Accessibility checks</td><td><span class="mono">oxlint</span> (already used) plus manual VoiceOver and TalkBack tests. If the team moves to ESLint, add <span class="mono">eslint-plugin-react-native-a11y</span>.</td><td>Do not rely on a lint rule alone. Oxlint is the repo’s current linter; do not add a second linter just for accessibility.</td></tr>
-          <tr><td>Transport icons</td><td><span class="mono">@expo/vector-icons</span> (already installed) or existing SVGs</td><td>Do not use emoji as the only transport label. Pair the icon with text.</td></tr>
+          <tr><td>Trip state guards</td><td><span class="mono">xstate</span> + <span class="mono">@xstate/react</span></td><td>The shipped trip is small enough for a local store. Add a state machine if transitions grow.</td></tr>
+          <tr><td>Live data and caching</td><td><span class="mono">@tanstack/react-query</span> + <span class="mono">zod</span></td><td>No external transport API is wired yet.</td></tr>
+          <tr><td>Offline cache</td><td><span class="mono">@react-native-async-storage/async-storage</span> and <span class="mono">workbox-build</span></td><td>Offline behavior is still a known gap, not a shipped feature.</td></tr>
+          <tr><td>Language</td><td><span class="mono">expo-localization</span> + <span class="mono">i18next</span></td><td>English only in this release.</td></tr>
+          <tr><td>Accessibility checks</td><td><span class="mono">oxlint</span> plus manual VoiceOver and TalkBack tests</td><td>Existing linter remains. No second linter was added.</td></tr>
+          <tr><td>Transport icons</td><td><span class="mono">@expo/vector-icons</span></td><td>Already installed and used; text always pairs with the icon.</td></tr>
         </tbody>
       </table>
 
       <div class="callout red">
-        <p><strong>Fix these before adding features.</strong> These are trust bugs.</p>
+        <p><strong>Fix these before adding live data.</strong> These trust bugs are still open. Active-trip sync is fixed; the location stop path is not.</p>
         <ol>
           <li><strong>Stop the background location task on every OFF path.</strong> In <span class="mono">LocationSharingContext.native.tsx</span>, cleanup removes the location subscription but does not stop the registered background task. The callback can keep writing <span class="mono">isSharing: true</span>. Await the stop call and check the server flag is false.</li>
           <li><strong>Wire the real destination into location sharing.</strong> The route pages set the navigation destination, not the location-sharing destination, so the 20-metre arrival stop may never fire. Pass the trip destination into the sharing context.</li>
@@ -1600,48 +1569,45 @@ yarn add -D workbox-build</pre>
         </ol>
       </div>
 
-      <h3 style="margin-top:34px">Five code changes to ship this week</h3>
+      <h3 style="margin-top:34px">Five accessibility changes: status</h3>
       <div class="grid-2">
         <div class="card">
           <ol>
-            <li><strong>Label the controls.</strong> Add <span class="mono">accessibilityRole</span>, <span class="mono">accessibilityLabel</span>, and <span class="mono">accessibilityHint</span> to <span class="mono">Button</span>, <span class="mono">SavedPlaceCard</span>, <span class="mono">TransitOptionCard</span>, and the icon-only back and close buttons. Start with “Call caregiver”, “Share location”, and each saved place. Run the existing <span class="mono">oxlint</span> check in CI; add ESLint only if the team standardizes on it.</li>
-            <li><strong>Stop shouting.</strong> Change all-caps labels to sentence case. “CALL CAREGIVER” becomes “Call caregiver”. “START NAVIGATION” becomes “Start trip”.</li>
-            <li><strong>Announce errors.</strong> Use <span class="mono">accessibilityLiveRegion</span> on Android, <span class="mono">AccessibilityInfo.announceForAccessibility</span> on iOS, and <span class="mono">aria-live</span> on web for form errors and route errors. A screen reader should hear “We cannot find a way. Call Mei Leng.” without moving focus.</li>
+            <li><strong>Label the controls.</strong> <span class="tag shipped">Shipped</span> The new trip, help, privacy, journey, and caregiver controls have roles, labels, and hints. The legacy directions, transit, login, and onboarding controls still need a sweep.</li>
+            <li><strong>Stop shouting.</strong> <span class="tag partial">Partly shipped</span> New screens use sentence case. The old directions and transit screens still use all caps.</li>
+            <li><strong>Announce errors.</strong> <span class="tag partial">Partly shipped</span> Login and onboarding show inline errors. Live-region announcements and a full screen-reader pass are still next.</li>
           </ol>
         </div>
         <div class="card">
           <ol start="4">
-            <li><strong>Let text breathe.</strong> Text scaling is already on. Remove fixed heights around text, avoid one-line truncation on the destination, set a sensible <span class="mono">maxFontSizeMultiplier</span>, and test at 200%. The fixed <span class="mono">h-[500px]</span> scroll area on the home screen will clip at large sizes.</li>
-            <li><strong>Respect motion.</strong> Use <span class="mono">useReducedMotion</span> from <span class="mono">react-native-reanimated</span> to skip slide and fade animations. Keep the state change; remove the movement.</li>
+            <li><strong>Let text breathe.</strong> <span class="tag partial">Partly shipped</span> The new screens use three text sizes and 44–48 px targets. The 200% test on every legacy screen is still next.</li>
+            <li><strong>Respect motion.</strong> <span class="tag next">Next</span> There is no reduced-motion setting yet. Use <span class="mono">useReducedMotion</span> from <span class="mono">react-native-reanimated</span> and keep the state change.</li>
           </ol>
-          <div class="callout-small" style="margin-top:12px">These are small, low-risk changes. They also make the bigger features easier to test with assistive technology.</div>
+          <div class="callout-small" style="margin-top:12px">The core trip is usable without these. They are still required before calling the app accessible.</div>
         </div>
       </div>
 
-      <h3 style="margin-top:34px">Copy deck: say it plainly</h3>
+      <h3 style="margin-top:34px">Copy deck: what the app says</h3>
       <table class="copy-table">
-        <caption class="sr-only">Current copy and plain-language replacements</caption>
-        <thead><tr><th>Where</th><th>Now</th><th>Use instead</th><th>Why</th></tr></thead>
+        <caption class="sr-only">Shipped copy and the remaining target</caption>
+        <thead><tr><th>Where</th><th>In the app</th><th>Still next</th><th>Why</th></tr></thead>
         <tbody>
-          <tr><td>Home</td><td class="old">Where do you want to go?</td><td class="new">Where are you going?</td><td>Shorter. “Want” can sound like a wish, not a trip.</td></tr>
-          <tr><td>Home</td><td class="old">Tap a location to get directions</td><td class="new">Tap a place to see the way.</td><td>“Location” and “directions” are map words. “Place” and “way” are everyday words.</td></tr>
-          <tr><td>Home</td><td class="old">Other location</td><td class="new">Another place</td><td>One idea, fewer syllables.</td></tr>
-          <tr><td>Onboarding</td><td class="old">Bookmark places you frequently travel to for easy access.</td><td class="new">Save the places you go often.</td><td>“Bookmark”, “frequently”, and “easy access” are three ideas in one sentence.</td></tr>
-          <tr><td>Route choice</td><td class="old">Choose your preferred route</td><td class="new">Pick a way to go.</td><td>“Preferred” asks the person to compare options. “Pick” is an action.</td></tr>
-          <tr><td>Route card</td><td class="old">Estimated journey time: 25 min</td><td class="new">About 25 minutes</td><td>“Estimated” is a caveat. “About” does the same job.</td></tr>
-          <tr><td>Directions</td><td class="old">START NAVIGATION</td><td class="new">Start trip</td><td>Sentence case. “Navigation” is a system word.</td></tr>
-          <tr><td>Directions</td><td class="old">Next Step →</td><td class="new">Next</td><td>The arrow and “step” are extra. “Next” is enough.</td></tr>
-          <tr><td>Directions</td><td class="old">I see the bus</td><td class="new">The bus has stopped. Get on bus 2.</td><td>Name the boarding step, then ask for confirmation.</td></tr>
-          <tr><td>Directions</td><td class="old">🎉 ARRIVED</td><td class="new">You are here.</td><td>Confetti is a surprise. “You are here” is information.</td></tr>
-          <tr><td>Error</td><td class="old">No route data available</td><td class="new">We cannot find a way. Call Mei Leng.</td><td>Say what happened and what to do next.</td></tr>
-          <tr><td>Account</td><td class="old">Logout</td><td class="new">Sign out</td><td>“Logout” is jargon. Keep it away from the main actions.</td></tr>
-          <tr><td>Caregiver</td><td class="old">Online / Offline</td><td class="new">Sharing / Not sharing</td><td>“Online” sounds like a chat status. “Sharing” says what it means.</td></tr>
-          <tr><td>Caregiver</td><td class="old">Dashboard</td><td class="new">People</td><td>“Dashboard” is an office word. The caregiver is looking after people.</td></tr>
-          <tr><td>Caregiver</td><td class="old">Locate</td><td class="new">See where they are</td><td>“Locate” sounds like tracking. The plain phrase is warmer and clearer.</td></tr>
+          <tr><td>Home</td><td class="new">“Hello, [name]. Where do you want to go?”</td><td class="old">“Where are you going?” is shorter, but “want” is not wrong.</td><td>“Want” can sound like a wish, not a trip. This is a low-risk change.</td></tr>
+          <tr><td>Home</td><td class="new">Saved place cards and journey destinations.</td><td class="old">No “Other place” map in this build.</td><td>The person picks a place, not an address.</td></tr>
+          <tr><td>Home</td><td class="new">“I need help”</td><td class="old">No “Support” or hidden menu.</td><td>Help is a normal action.</td></tr>
+          <tr><td>Trip start</td><td class="new">“Start trip” and “Practice this trip”</td><td class="old">“START NAVIGATION” remains only on the legacy directions screen.</td><td>Sentence case; “navigation” is a system word.</td></tr>
+          <tr><td>Boarding</td><td class="new">“The bus has stopped”, “Get on bus 2”, “I am on the bus”</td><td class="old">No “I see the bus” as the action.</td><td>Name the step, then ask for confirmation.</td></tr>
+          <tr><td>Missed bus</td><td class="new">“The bus did not stop”</td><td class="old">The app says the next bus will come in 8 minutes. That is not live data.</td><td>Offer a next action without a false arrival claim.</td></tr>
+          <tr><td>Arrival</td><td class="new">“You are here.”</td><td class="old">The legacy screen still uses “🎉 ARRIVED”.</td><td>Confetti is a surprise; “You are here” is information.</td></tr>
+          <tr><td>Help</td><td class="new">“Please call my caregiver.” and “Show this to someone”</td><td class="old">No SMS or “Send my location”.</td><td>The card does the explaining, not the person.</td></tr>
+          <tr><td>Privacy</td><td class="new">“This trip only”, “Always”, “Paused”</td><td class="old">No history or allow-calls controls.</td><td>Three choices the person can see and change.</td></tr>
+          <tr><td>Account</td><td class="new">“Sign out of this phone”</td><td class="old">“Logout” remains on older screens.</td><td>“Logout” is jargon.</td></tr>
+          <tr><td>Caregiver</td><td class="new">“People you support”, “Sharing / Not sharing”, “Location”</td><td class="old">Legacy transit copy still differs.</td><td>Say what the caregiver sees and does.</td></tr>
         </tbody>
       </table>
 
-      <h3 style="margin-top:34px">Notification copy</h3>
+      <h3 style="margin-top:34px">Notification copy (target)</h3>
+      <p style="color:var(--muted);font-size:.9rem">Push notifications are not wired in this build. The caregiver sees the boarding check inside the app. Use this copy when alerts ship.</p>
       <div class="grid-2">
         <div class="card">
           <h4>To the caregiver</h4>
@@ -1669,6 +1635,7 @@ yarn add -D workbox-build</pre>
       </div>
 
       <h3 style="margin-top:34px">Accessibility acceptance criteria</h3>
+      <p style="color:var(--muted);font-size:.9rem">This is the bar, not the current status. The new screens meet part of it; the legacy screens and the assistive-technology pass do not yet.</p>
       <table class="audit-table">
         <caption class="sr-only">Acceptance criteria for accessibility</caption>
         <thead><tr><th>Area</th><th>Criterion</th><th>How to check</th></tr></thead>
@@ -1676,25 +1643,26 @@ yarn add -D workbox-build</pre>
           <tr><td>Text</td><td>4.5:1 contrast for body text; 3:1 for large text. Text can grow to 200% without clipping or losing content.</td><td>Contrast checker; device font settings; 200% browser zoom.</td></tr>
           <tr><td>Targets</td><td>All controls are at least 48 × 48 px, with 8 px between targets.</td><td>Measure on the smallest supported phone.</td></tr>
           <tr><td>Screen reader</td><td>Every control has a name, role, and state. Every error is announced. The reading order matches the visual order.</td><td>VoiceOver on iOS, TalkBack on Android, NVDA on web.</td></tr>
-          <tr><td>Language</td><td>On-screen instructions use 10 words or fewer. Easy Read text averages 15 words or fewer. One action or idea per screen. No all caps.<a class="cite" href="#src-18">[18]</a><a class="cite" href="#src-6">[6]</a></td><td>Copy review with a person with an intellectual disability; count words in the longest five sentences.</td></tr>
+          <tr><td>Language</td><td>On-screen instructions use 10 words or fewer. Easy Read text averages 15 words or fewer. One action or idea per screen. No all caps.<a class="cite" href="#src-18">[18]</a><a class="cite" href="#src-6">[6]</a></td><td>Copy review with PWID; count words in the longest five sentences.</td></tr>
           <tr><td>Time</td><td>No countdown forces a decision. Any timeout can be extended. The help card stays open until closed.</td><td>Turn on the screen reader, wait, and check that nothing disappears.</td></tr>
           <tr><td>Errors</td><td>Errors say what happened and what to do next. Destructive actions ask for confirmation.</td><td>Test with airplane mode, denied permission, and no route.</td></tr>
           <tr><td>Motion</td><td>Reduced motion removes slides, fades, and map animation. State changes remain visible.</td><td>Turn on Reduce Motion in the OS; walk the trip flow.</td></tr>
-          <tr><td>Offline</td><td>On native, the trip, help card, and caregiver number work with no data. On web, the app says what is cached and what needs a connection.</td><td>Airplane mode test on the actual route, on native and web.</td></tr>
+          <tr><td>Offline</td><td>Target: on native, the trip, help card, and caregiver number work with no data. On web, the app says what is cached and what needs a connection. Current: not shipped.</td><td>Airplane mode test on the actual route, on native and web.</td></tr>
         </tbody>
       </table>
       <p style="margin-top:12px;color:var(--muted);font-size:.9rem">Base standard: WCAG 2.2 AA, plus the W3C COGA design patterns for clear purpose, familiar controls, clear steps, and help.<a class="cite" href="#src-15">[15]</a><a class="cite" href="#src-5">[5]</a></p>
 
-      <h3 style="margin-top:34px">Data model additions</h3>
+      <h3 style="margin-top:34px">Data model in the build</h3>
       <table class="audit-table">
-        <caption class="sr-only">Data model additions</caption>
-        <thead><tr><th>Entity</th><th>Fields</th><th>Why</th></tr></thead>
+        <caption class="sr-only">Shipped data model and the remaining proposals</caption>
+        <thead><tr><th>Entity</th><th>Fields in the build</th><th>Status and why</th></tr></thead>
         <tbody>
-          <tr><td>Trip</td><td><span class="mono">id, pwidId, originPlaceId, destinationPlaceId, steps[], status, startedAt, boardingConfirmedAt, boardingPromptedAt, arrivedAt, sharingMode</span></td><td>One trip has many steps and one sharing rule. Boarding confirmation is a trip event; the caregiver alert depends on the time after the bus arrives.</td></tr>
-          <tr><td>TripStep</td><td><span class="mono">id, order, type (walk, wait, board, ride, alight, walk), instruction, photoKey, voiceNoteKey, latlng, radius, trigger</span></td><td>The step is the unit of instruction, media, and geofence. Keep it small and cacheable. “Board” needs a manual confirmation, not a geofence alone.</td></tr>
-          <tr><td>SupportCard</td><td><span class="mono">pwidId, displayName, photoKey, destinationLabel, caregiverName, caregiverPhone, secondContact, showPhoto, active</span></td><td>The card must render offline. Store the display fields locally as well as on the server.</td></tr>
-          <tr><td>ConsentSettings</td><td><span class="mono">pwidId, sharingMode, historyEnabled, viewers[], pauseUntil, updatedAt</span></td><td>Consent is a first-class record, not a boolean hidden in the UI.</td></tr>
-          <tr><td>Alert</td><td><span class="mono">id, tripId, type, severity, createdAt, resolvedAt, resolution</span></td><td>Alerts need a close-the-loop state, or caregivers learn to ignore them.</td></tr>
+          <tr><td>ActiveTrip</td><td><span class="mono">id, travellerName, travellerPhone, destination, origin, stage, busNumber, startedAt, updatedAt, caregiverName, caregiverPhone, practice</span></td><td>Shipped. Local storage plus Firebase. The caregiver subscribes to the latest trip. No boarding timestamp or alert record.</td></tr>
+          <tr><td>Journey</td><td><span class="mono">id, destinationName, originName, busNumber, steps[], updatedAt</span></td><td>Shipped. The caregiver owns the journey; it is read into the trip story.</td></tr>
+          <tr><td>JourneyStep</td><td><span class="mono">id, title, detail, photoUrl</span></td><td>Shipped. Up to eight steps. No geofence, voice note, or trigger yet.</td></tr>
+          <tr><td>PWID profile</td><td><span class="mono">caregiverPhone, savedPlaces, journeys, activeTrip, location</span></td><td>Shipped. Active trip and location are shared; saved places and journeys are caregiver setup.</td></tr>
+          <tr><td>Preferences</td><td><span class="mono">easyRead, textScale, privacyMode</span></td><td>Shipped on the device. Not synced to the account.</td></tr>
+          <tr><td>Proposed additions</td><td><span class="mono">TripStep</span> geofence/trigger, <span class="mono">SupportCard</span> offline fields, <span class="mono">ConsentSettings</span> history/viewers, <span class="mono">Alert</span> resolution</td><td>Not shipped. These are still needed for live bus data, offline help, and caregiver escalation.</td></tr>
         </tbody>
       </table>
 
@@ -1705,14 +1673,14 @@ yarn add -D workbox-build</pre>
         <thead><tr><th>Scheme</th><th>What it offers</th><th>How EasyBoard should use it</th></tr></thead>
         <tbody>
           <tr><td>Helping Hand cards</td><td>Free cards from Passenger Service Centres or SimplyGo Ticket Offices. Includes “Please alert me when I am approaching my stop” and a card where the person writes the help they need.</td><td>Explain the cards in the help section and use the same wording. Do not claim an API or a digital card.</td></tr>
-          <tr><td>PWD Concession Card</td><td>For eligible Singapore Citizens and PRs under 60, including people with intellectual disability. Free to apply; up to 55% off adult fares; $55 monthly pass option.</td><td>Show eligibility and a link in the trip readiness check. Do not imply EasyBoard can read the card or fare balance.</td></tr>
+          <tr><td>PWD Concession Card</td><td>For eligible Singapore Citizens and PRs under 60, including PWID. Free to apply; up to 55% off adult fares; $55 monthly pass option.</td><td>Show eligibility and a link in the trip readiness check. Do not imply EasyBoard can read the card or fare balance.</td></tr>
           <tr><td>Community Mobility Level 1</td><td>An eight-hour course on pedestrian safety, public transport modes, and boarding. Listed at $320, or $16 after subsidy; confirm the current fee with Bizlink.</td><td>Refer people who want structured training. Do not book or take payment for it.</td></tr>
           <tr><td>Travel Makers</td><td>A volunteering programme that paired youth with MINDS students for up to eight weekly commute sessions. Reported as a 2023 initiative.</td><td>Describe it as a partner programme, not an open service. Check availability before listing a sign-up link.</td></tr>
         </tbody>
       </table>
 
       <div class="callout">
-        <p><strong>Privacy note.</strong> Use <span class="mono">expo-secure-store</span> for the caregiver number on native. On web, fetch it after auth and keep it in memory; do not put it in localStorage. Keep the cached help card minimal. Do not hand-roll encryption. Show only the first name by default, and let the person hide the photo. The caregiver number is sensitive too; do not put it in a public link.</p>
+        <p><strong>Privacy note for the next build.</strong> The shipped card shows the stored name, destination, and caregiver number, and works while the app is open. Use <span class="mono">expo-secure-store</span> for the caregiver number on native. On web, fetch it after auth and keep it in memory; do not put it in localStorage. Keep the cached help card minimal. Do not hand-roll encryption. Show only the first name by default, and let the person hide the photo. The caregiver number is sensitive too; do not put it in a public link.</p>
       </div>
     </div>
   </section>
@@ -1724,11 +1692,15 @@ yarn add -D workbox-build</pre>
         <p>Do not test whether people “like” the app. Test whether they can finish a trip, recover from a problem, and ask for help. Run the test on real routes with real phones.</p>
       </div>
 
+      <div class="callout green">
+        <p><strong>What this build has been checked for.</strong> TypeScript, 320 px and 375 px layouts, the PWID and caregiver views, cross-device active-trip sync, direct-route back navigation, journey photo upload, and a fresh browser console with no errors or warnings. It has not been tested with PWID on a real route, with VoiceOver or TalkBack, or in airplane mode. Those are the next tests, not done work.</p>
+      </div>
+
       <div class="grid-2">
         <div class="card">
           <h3>Who to include</h3>
           <ul>
-            <li><strong>6 to 8 people with intellectual disabilities.</strong> Mix reading levels, phone confidence, and support needs. Include at least two people who do not read.</li>
+            <li><strong>6 to 8 PWID.</strong> Mix reading levels, phone confidence, and support needs. Include at least two people who do not read.</li>
             <li><strong>3 caregivers.</strong> Include one older caregiver and one support worker who manages several people.</li>
             <li><strong>2 transport staff or volunteers.</strong> They are the people a help card is shown to.</li>
             <li><strong>1 speech and language therapist or AAC (communication aid) specialist.</strong> Review the copy and the audio.</li>
@@ -1763,15 +1735,15 @@ yarn add -D workbox-build</pre>
         <thead><tr><th>Risk</th><th>What could happen</th><th>Mitigation</th></tr></thead>
         <tbody>
           <tr><td>Sharing does not stop</td><td>The app says sharing is off, but background updates continue. That is a privacy breach.</td><td>Stop the background task on every path, verify the server flag, and add an integration test that waits after stop and checks for new writes.</td></tr>
-          <tr><td>GPS drift</td><td>The wrong step appears, or an alert fires when nothing is wrong.</td><td>Manual advance, geofence radius tuning, “I’m okay” check, and a caregiver confirmation before a call.</td></tr>
-          <tr><td>Person does not board</td><td>The bus stops, but the person stays at the stop or does not move to the door.</td><td>Boarding screen with the open door, a 45-second confirmation check, a caregiver voice note, and a “bus did not stop” path.</td></tr>
+          <tr><td>GPS drift</td><td>The wrong step appears, or an alert fires when nothing is wrong.</td><td>Manual advance is shipped. Geofence radius tuning, an “I’m okay” check, and caregiver confirmation are only relevant if geofences ship.</td></tr>
+          <tr><td>Person does not board</td><td>The bus stops, but the person stays at the stop or does not move to the door.</td><td>Boarding confirmation and a 45-second caregiver check are shipped. A caregiver voice note is not. The wait screen has “The bus did not stop”.</td></tr>
           <tr><td>Wrong bus</td><td>The person boards a bus with the same number but the wrong destination, or a different route.</td><td>Show the bus number and destination, a “is this my bus?” driver script, and a caregiver check for the first three trips.</td></tr>
           <tr><td>Surveillance</td><td>The person feels watched and stops using the app, or a caregiver uses it to control them.</td><td>Trip-only default, visible badge, pause, history off, no silent changes, and a review with the person.</td></tr>
-          <tr><td>Digital divide</td><td>People without data, a recent phone, or a charger are excluded.</td><td>Offline trip, SMS fallback, printable card, low-data mode, and a caregiver phone call.</td></tr>
+          <tr><td>Digital divide</td><td>People without data, a recent phone, or a charger are excluded.</td><td>Not solved. The help card needs the app open. Offline cache, SMS, and a printable card are next.</td></tr>
           <tr><td>Alert fatigue</td><td>Caregivers ignore alerts because there are too many.</td><td>Only alert on exceptions the person cannot resolve. Group alerts. Measure response time, not alert volume.</td></tr>
           <tr><td>Old photos</td><td>The person follows a landmark that has moved or changed.</td><td>Show the photo date. Ask the caregiver to review routes each term. Let the person flag “this photo is old”.</td></tr>
-          <tr><td>Over-reliance</td><td>The person can follow the app but cannot recover when it fails.</td><td>Practice mode, “what if” quiz, and a paper backup card. The app should teach the route.</td></tr>
-          <tr><td>Audio privacy</td><td>The phone reads personal details aloud in public.</td><td>Headphone prompt, volume warning, and a “read silently” option. The help card is the only screen designed to be shown.</td></tr>
+          <tr><td>Over-reliance</td><td>The person can follow the app but cannot recover when it fails.</td><td>Practice mode is shipped. The “what if” quiz, sign-off, and paper backup card are not.</td></tr>
+          <tr><td>Audio privacy</td><td>The phone reads personal details aloud in public.</td><td>Read aloud is shipped. A headphone prompt and “read silently” option are next. The help card is designed to be shown.</td></tr>
           <tr><td>Data breach</td><td>Location, photos, or caregiver numbers leak.</td><td>Encrypt at rest, limit retention, role-based access, and a clear deletion path.</td></tr>
         </tbody>
       </table>
@@ -1779,33 +1751,35 @@ yarn add -D workbox-build</pre>
       <h3 style="margin-top:30px">Roadmap</h3>
       <div class="roadmap">
         <div class="card">
-          <div class="when">WEEKS 1–2</div>
-          <h3>Phase 0 · Learn</h3>
+          <div class="when">SHIPPED</div>
+          <h3>What is in the app</h3>
           <ul>
-            <li>Recruit 8 participants and 3 caregivers.</li>
-            <li>Run co-design on paper and prototype.</li>
-            <li>Pick two real routes for the field test.</li>
-            <li>Write the easy-read copy deck.</li>
+            <li>Guided Trip, Trip Story, and practice start.</li>
+            <li>Help Card with call, full-screen show, and 999.</li>
+            <li>Three privacy modes and active-trip sync.</li>
+            <li>Caregiver journeys with photo upload.</li>
+            <li>Read aloud, text sizes, and Easy read spacing.</li>
           </ul>
         </div>
         <div class="card">
-          <div class="when">WEEKS 3–10</div>
-          <h3>Phase 1 · P0</h3>
+          <div class="when">NEXT</div>
+          <h3>Trust and reach</h3>
           <ul>
-            <li>Guided Trip Mode and offline cache.</li>
-            <li>Easy Read and Read Aloud.</li>
-            <li>Help Card and SMS fallback.</li>
-            <li>Trip Story and calm change alerts.</li>
-            <li>Field test with 6 people.</li>
+            <li>Location stop path, destination auto-stop, and “xxx” copy.</li>
+            <li>Offline help card and SMS fallback.</li>
+            <li>VoiceOver, TalkBack, 200% text, and reduced motion.</li>
+            <li>Photo dates, practice quiz, and caregiver sign-off.</li>
+            <li>Field test with PWID on two real routes.</li>
           </ul>
         </div>
         <div class="card">
-          <div class="when">WEEKS 11–22</div>
-          <h3>Phase 2 · P1</h3>
+          <div class="when">LATER</div>
+          <h3>Live and proactive</h3>
           <ul>
-            <li>Caregiver Co-pilot.</li>
-            <li>Practice Mode and voice notes.</li>
-            <li>Privacy Center.</li>
+            <li>Live bus data and arrival-aware boarding checks.</li>
+            <li>Caregiver push alerts, ETA, off-route, and no-movement.</li>
+            <li>Caregiver voice notes and per-step audio.</li>
+            <li>History controls and supported-decision records.</li>
             <li>Partner referral: MINDS, Travel Makers, Heart Zones. Travel Buddy for wheelchair users only.<a class="cite" href="#src-17">[17]</a><a class="cite" href="#src-9">[9]</a></li>
           </ul>
         </div>
@@ -1817,7 +1791,7 @@ yarn add -D workbox-build</pre>
           <ol>
             <li>Is the phone personal or shared with a caregiver or support worker?</li>
             <li>Who pays for data, and what happens when the data runs out?</li>
-            <li>Can a caregiver create a trip without the person’s involvement?</li>
+            <li>Resolved: a caregiver can set up a journey, but the person starts the trip. Is that the right split for every family?</li>
             <li>What is the legal basis for location sharing under Singapore’s PDPA (data protection law), and how is consent recorded?</li>
           </ol>
         </div>
@@ -1833,7 +1807,7 @@ yarn add -D workbox-build</pre>
       </div>
 
       <div class="callout green">
-        <p><strong>Definition of done.</strong> A person who has never used EasyBoard can board the right bus, travel a practised route, handle one delay, and ask for help, without reading more than one short sentence at a time. If that is true, the product works.</p>
+        <p><strong>Definition of done.</strong> A person who has never used EasyBoard can board the right bus, travel a practised route, recover from a missed bus or missed stop, and ask for help, without reading more than one short sentence at a time. If that is true, the product works.</p>
       </div>
     </div>
   </section>
@@ -1881,9 +1855,9 @@ yarn add -D workbox-build</pre>
 
 <footer class="footer">
   <div class="wrap">
-    <p><strong>EasyBoard research</strong> · November 2026</p>
-    <p>This is a product research document, not a finished specification. The mockups are illustrative. The sources are linked so the claims can be checked.</p>
-    <p>Next step: pick two real routes, recruit eight people with different support needs, and test the help card with a real stranger.</p>
+    <p><strong>EasyBoard research</strong> · November 2026 · status reflects the shipped branch</p>
+    <p>This is a product research document, not a finished specification. The mockups are illustrative; the status labels and the Today section describe what is in the app. The sources are linked so the claims can be checked.</p>
+    <p>Next step: fix the location stop path, test offline behavior, run VoiceOver and TalkBack, then test two real routes with PWID and a real stranger.</p>
   </div>
 </footer>
 
@@ -2028,8 +2002,8 @@ yarn add -D workbox-build</pre>
     screenButtons.forEach(button => button.setAttribute('aria-selected', button.dataset.screenBtn === name ? 'true' : 'false'));
     const caregiver = name === 'caregiver';
     phone.dataset.role = caregiver ? 'cg' : 'pwid';
-    pwidTabs.hidden = caregiver;
-    cgTabs.hidden = !caregiver;
+    if (pwidTabs) pwidTabs.hidden = caregiver;
+    if (cgTabs) cgTabs.hidden = !caregiver;
     $$('.tabbtn', phone).forEach(button => {
       const target = button.dataset.goto;
       const active = target === name || (target === 'story' && tripScreens.includes(name));
@@ -2096,10 +2070,14 @@ yarn add -D workbox-build</pre>
     if (event.key === 'Escape' && overlay.style.display === 'flex') closeHelp();
   });
 
-  // Privacy switches
+  // Privacy switches: one mode at a time, like the shipped radio choices.
   $$('.switch', phone).forEach(control => control.addEventListener('click', () => {
-    const on = !control.classList.toggle('off');
-    control.setAttribute('aria-checked', on ? 'true' : 'false');
+    $$('.switch', phone).forEach(other => {
+      other.classList.add('off');
+      other.setAttribute('aria-checked', 'false');
+    });
+    control.classList.remove('off');
+    control.setAttribute('aria-checked', 'true');
   }));
 
   // Audio buttons
