@@ -8,6 +8,11 @@ import { getUserStorage } from '../services/storageService'
 import { subscribeSessionChanged } from '../services/sessionEvents'
 import { getActiveTrip, initTripStore, subscribeToTrip, type ActiveTrip } from '../services/tripStore'
 import {
+  clearLocationAutoStop,
+  markLocationAutoStop,
+  readLocationAutoStop
+} from '../services/locationAutoStop'
+import {
   getUserData,
   stopPWIDLocationSharing,
   updatePWIDLocation
@@ -32,12 +37,14 @@ const BACKGROUND_TASK = 'background_location'
 const backgroundState: {
   phone: string | null
   destination: { lat: number; lng: number } | null
-  privacyMode: string
+  privacyMode: string | null
   stoppedPhone: string | null
 } = {
   phone: null,
   destination: null,
-  privacyMode: 'trip-only',
+  // Null means this is a fresh process. The active trip's saved privacy mode
+  // is the only reliable copy after an OS relaunch.
+  privacyMode: null,
   stoppedPhone: null
 }
 
@@ -87,12 +94,31 @@ if (!TaskManager.isTaskDefined(BACKGROUND_TASK)) {
           target.lng
         )
         if (distance < 20) {
+          const reason = 'Arrived at destination'
           await stopPWIDLocationSharing(phone)
           if (await TaskManager.isTaskRegisteredAsync(BACKGROUND_TASK)) {
             await Location.stopLocationUpdatesAsync(BACKGROUND_TASK)
           }
+          // Leave a durable marker for the foreground app. The task can run in
+          // a headless JS context, so React state cannot be updated directly.
+          await markLocationAutoStop(phone, reason)
           backgroundState.destination = null
           backgroundState.stoppedPhone = phone
+          try {
+            const pwidUser = await getUserData(phone)
+            if (pwidUser && pwidUser.userType === 'PWID') {
+              const pwid = pwidUser as PWIDUser
+              if (pwid.caregiverPhone) {
+                await notificationService.sendLocationStopNotification(
+                  phone,
+                  pwid.caregiverPhone,
+                  reason
+                )
+              }
+            }
+          } catch (notificationError) {
+            console.error('Error sending arrival notification:', notificationError)
+          }
         }
       }
     } catch (updateError) {
@@ -112,11 +138,15 @@ export const LocationSharingProvider: React.FC<{ children: React.ReactNode }> = 
   const [autoStopped, setAutoStopped] = useState(false)
   const [activeTrip, setActiveTrip] = useState<ActiveTrip | null>(getActiveTrip)
   const [destination, setDestinationState] = useState<{ lat: number; lng: number } | null>(null)
+  const [sessionReady, setSessionReady] = useState(false)
+  const [tripHydrated, setTripHydrated] = useState(false)
 
   const permissionDeniedRef = useRef(false)
+  const shouldShareRef = useRef(false)
   const notifiedShareRef = useRef(false)
   const hasStartedSharingRef = useRef(false)
   const startAttemptRef = useRef(0)
+  const startedAtRef = useRef(0)
   const stopReasonRef = useRef<string | undefined>(undefined)
   const pwidPhoneRef = useRef<string | null>(null)
 
@@ -125,8 +155,12 @@ export const LocationSharingProvider: React.FC<{ children: React.ReactNode }> = 
   }, [destination])
 
   useEffect(() => {
+    // Do not publish the default mode while preferences are still loading.
+    // A task firing in that window would treat an Always traveller as
+    // trip-only and stop sharing at the destination.
+    if (!ready) return
     backgroundState.privacyMode = preferences.privacyMode
-  }, [preferences.privacyMode])
+  }, [preferences.privacyMode, ready])
 
   useEffect(() => {
     const phone = pwidPhoneNumber
@@ -134,26 +168,56 @@ export const LocationSharingProvider: React.FC<{ children: React.ReactNode }> = 
     backgroundState.phone = phone
   }, [pwidPhoneNumber])
 
-  useEffect(() => subscribeToTrip(setActiveTrip), [])
+  useEffect(() => {
+    let active = true
+    initTripStore()
+      .catch(error => console.error('Error loading trip state:', error))
+      .finally(() => {
+        if (!active) return
+        setActiveTrip(getActiveTrip())
+        setTripHydrated(true)
+      })
+    const unsubscribe = subscribeToTrip(setActiveTrip)
+    return () => {
+      active = false
+      unsubscribe()
+    }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
     const load = async () => {
+      setSessionReady(false)
       setIsLocationSharingState(false)
       setPermissionDenied(false)
       permissionDeniedRef.current = false
       setSharingError(null)
       setAutoStopped(false)
-      const stored = await getUserStorage()
-      if (cancelled) return
-      setPwidPhoneNumber(stored?.phoneNumber || null)
-      setUserType(stored?.userType)
-      setPreview(Boolean(stored?.preview))
-      if (stored?.userType !== 'PWID') {
-        setIsLocationSharingState(false)
-        setPermissionDenied(false)
-        permissionDeniedRef.current = false
-        setSharingError(null)
+      try {
+        const stored = await getUserStorage()
+        if (cancelled) return
+        setPwidPhoneNumber(stored?.phoneNumber || null)
+        setUserType(stored?.userType)
+        setPreview(Boolean(stored?.preview))
+        if (stored?.userType !== 'PWID') {
+          setIsLocationSharingState(false)
+          setPermissionDenied(false)
+          permissionDeniedRef.current = false
+          setSharingError(null)
+          return
+        }
+        if (stored.phoneNumber) {
+          const autoStop = await readLocationAutoStop(stored.phoneNumber)
+          if (cancelled) return
+          if (autoStop) {
+            // The background task already stopped at the destination. Do not
+            // start sharing again when the same trip is reopened.
+            setDestinationState(null)
+            setAutoStopped(true)
+          }
+        }
+      } finally {
+        if (!cancelled) setSessionReady(true)
       }
     }
     load().catch(error => console.error('Error loading location session:', error))
@@ -164,20 +228,39 @@ export const LocationSharingProvider: React.FC<{ children: React.ReactNode }> = 
     }
   }, [])
 
+  const reconcileAutoStop = useCallback(async (handledByTask: boolean) => {
+    const phone = pwidPhoneRef.current
+    if (!phone) return
+    backgroundState.stoppedPhone = null
+    setDestinationState(null)
+    setAutoStopped(true)
+    if (handledByTask) {
+      // The background task already wrote isSharing: false and sent the
+      // arrival notification. Suppress a second generic stop notification.
+      hasStartedSharingRef.current = false
+      notifiedShareRef.current = false
+      stopReasonRef.current = undefined
+      await clearLocationAutoStop(phone)
+    }
+    setIsLocationSharingState(false)
+  }, [])
+
   // A background auto-stop cannot call React state setters from a headless
-  // context. When the app returns, reconcile the visible state.
+  // context. The marker is visible across runtimes; reconcile on resume.
   useEffect(() => {
     const subscription = AppState.addEventListener('change', state => {
       if (state !== 'active') return
-      if (backgroundState.stoppedPhone && backgroundState.stoppedPhone === pwidPhoneRef.current) {
-        backgroundState.stoppedPhone = null
-        setDestinationState(null)
-        setAutoStopped(true)
-        setIsLocationSharingState(false)
-      }
+      const phone = pwidPhoneRef.current
+      if (!phone) return
+      void (async () => {
+        const marker = await readLocationAutoStop(phone)
+        if (marker || backgroundState.stoppedPhone === phone) {
+          await reconcileAutoStop(true)
+        }
+      })()
     })
     return () => subscription.remove()
-  }, [])
+  }, [reconcileAutoStop])
 
   const sendShareNotificationToCaregiver = useCallback(async () => {
     try {
@@ -217,8 +300,9 @@ export const LocationSharingProvider: React.FC<{ children: React.ReactNode }> = 
 
   // Only a PWID account starts sharing automatically. Caregivers never share.
   useEffect(() => {
-    if (!ready) return
+    if (!ready || !sessionReady || !tripHydrated) return
     if (preview || userType !== 'PWID' || preferences.privacyMode === 'paused') {
+      shouldShareRef.current = false
       setIsLocationSharingState(false)
       return
     }
@@ -227,11 +311,33 @@ export const LocationSharingProvider: React.FC<{ children: React.ReactNode }> = 
       preferences.privacyMode === 'always' ||
       (preferences.privacyMode === 'trip-only' && tripIsActive)
     if (!shouldShare) {
+      shouldShareRef.current = false
       setIsLocationSharingState(false)
       return
     }
-    if (!permissionDeniedRef.current && !sharingError && !autoStopped) setIsLocationSharingState(true)
-  }, [activeTrip, autoStopped, preferences.privacyMode, preview, ready, sharingError, userType])
+    const canShare =
+      !permissionDeniedRef.current &&
+      !sharingError &&
+      (preferences.privacyMode === 'always' || !autoStopped)
+    shouldShareRef.current = canShare
+    if (canShare) {
+      if (preferences.privacyMode === 'always' && pwidPhoneNumber) {
+        void clearLocationAutoStop(pwidPhoneNumber)
+      }
+      setIsLocationSharingState(true)
+    }
+  }, [
+    activeTrip,
+    autoStopped,
+    preferences.privacyMode,
+    preview,
+    pwidPhoneNumber,
+    ready,
+    sessionReady,
+    sharingError,
+    tripHydrated,
+    userType
+  ])
 
   useEffect(() => {
     const stopLocationUpdates = async () => {
@@ -247,7 +353,15 @@ export const LocationSharingProvider: React.FC<{ children: React.ReactNode }> = 
     const stopSharing = async () => {
       await stopLocationUpdates()
       if (!hasStartedSharingRef.current || !pwidPhoneNumber) return
+      // The background task handles the arrival stop itself. If its marker is
+      // present, it already cleared the remote flag and sent the reason.
+      const autoStop = await readLocationAutoStop(pwidPhoneNumber)
       hasStartedSharingRef.current = false
+      if (autoStop) {
+        notifiedShareRef.current = false
+        await clearLocationAutoStop(pwidPhoneNumber)
+        return
+      }
       stopPWIDLocationSharing(pwidPhoneNumber).catch(() => {})
       if (notifiedShareRef.current) {
         void sendStopNotificationToCaregiver()
@@ -255,9 +369,18 @@ export const LocationSharingProvider: React.FC<{ children: React.ReactNode }> = 
       }
     }
 
+    // Wait for the session and saved trip before deciding to stop. On a cold
+    // start the first render is always false, and stopping there would kill
+    // the task left running by the previous session.
+    if (!ready || !sessionReady || !tripHydrated) return
+
     const attempt = ++startAttemptRef.current
 
     if (!isLocationSharing || !pwidPhoneNumber || userType !== 'PWID' || preview) {
+      // The auto-share effect runs in the same commit and may just have set
+      // isLocationSharing true. Do not stop the task left running by the
+      // previous session in that window.
+      if (shouldShareRef.current) return
       void stopSharing()
       return
     }
@@ -269,6 +392,7 @@ export const LocationSharingProvider: React.FC<{ children: React.ReactNode }> = 
         if (attempt === startAttemptRef.current) {
           hasStartedSharingRef.current = true
           notifiedShareRef.current = true
+          startedAtRef.current = Date.now()
         }
         return
       }
@@ -307,6 +431,7 @@ export const LocationSharingProvider: React.FC<{ children: React.ReactNode }> = 
           }
         })
         hasStartedSharingRef.current = true
+        startedAtRef.current = Date.now()
 
         // The trip may have ended while the permission prompts were open.
         if (attempt !== startAttemptRef.current) {
@@ -338,18 +463,58 @@ export const LocationSharingProvider: React.FC<{ children: React.ReactNode }> = 
     sendShareNotificationToCaregiver,
     sendStopNotificationToCaregiver,
     preview,
+    ready,
+    sessionReady,
+    tripHydrated,
     userType
   ])
+
+  // The app can stay in the foreground while the background task stops at the
+  // destination. Poll the durable marker and task registration so the screen
+  // does not keep saying "Sharing" after updates have stopped.
+  useEffect(() => {
+    if (!sessionReady || !isLocationSharing || !pwidPhoneNumber) return
+    let active = true
+    const check = async () => {
+      const marker = await readLocationAutoStop(pwidPhoneNumber)
+      if (!active) return
+      if (marker || backgroundState.stoppedPhone === pwidPhoneNumber) {
+        await reconcileAutoStop(true)
+        return
+      }
+      if (!hasStartedSharingRef.current) return
+      if (Date.now() - startedAtRef.current < 5000) return
+      const registered = await TaskManager.isTaskRegisteredAsync(BACKGROUND_TASK)
+      if (!active) return
+      if (!registered) {
+        const lateMarker = await readLocationAutoStop(pwidPhoneNumber)
+        if (!active) return
+        await reconcileAutoStop(Boolean(lateMarker))
+      }
+    }
+    void check()
+    const timer = setInterval(() => void check(), 2500)
+    return () => {
+      active = false
+      clearInterval(timer)
+    }
+  }, [isLocationSharing, pwidPhoneNumber, reconcileAutoStop, sessionReady])
 
   const setIsLocationSharing = useCallback((share: boolean) => {
     if (share && permissionDeniedRef.current) return
     setIsLocationSharingState(share)
   }, [])
 
-  const resetAutoStop = useCallback(() => setAutoStopped(false), [])
+  const resetAutoStop = useCallback(() => {
+    setAutoStopped(false)
+    const phone = pwidPhoneRef.current
+    if (phone) void clearLocationAutoStop(phone)
+  }, [])
 
   const retrySharing = useCallback(() => {
     setAutoStopped(false)
+    const phone = pwidPhoneRef.current
+    if (phone) void clearLocationAutoStop(phone)
     permissionDeniedRef.current = false
     setPermissionDenied(false)
     setSharingError(null)
@@ -357,7 +522,6 @@ export const LocationSharingProvider: React.FC<{ children: React.ReactNode }> = 
   }, [])
 
   const setDestination = useCallback((dest: { lat: number; lng: number } | null) => {
-    if (dest) setAutoStopped(false)
     setDestinationState(dest)
   }, [])
 

@@ -12,6 +12,7 @@ import notificationService from '../../services/notificationService'
 import { getUserStorage } from '../../services/storageService'
 import { isTripExpired, stageLabel, type ActiveTrip } from '../../services/tripStore'
 import {
+  getFCMToken,
   getPWIDsByCaregiverPhone,
   listenToPWIDLocation,
   subscribeToActiveTrip
@@ -95,10 +96,32 @@ export function CaregiverHome() {
   }, [])
 
   useEffect(() => {
-    notificationService
-      .checkPermissions()
-      .then(setNotificationsEnabled)
-      .catch(error => console.error('Error checking notification permission:', error))
+    let active = true
+    const checkNotifications = async () => {
+      try {
+        const stored = await getUserStorage()
+        const permitted = await notificationService.checkPermissions()
+        if (!active) return
+        if (!permitted || !stored?.phoneNumber) {
+          setNotificationsEnabled(false)
+          return
+        }
+        // Permission alone is not enough. A missing VAPID key or failed token
+        // registration means push will not arrive.
+        const token = await getFCMToken(stored.phoneNumber)
+        if (active) setNotificationsEnabled(Boolean(token))
+      } catch (error) {
+        console.error('Error checking notification registration:', error)
+        if (active) setNotificationsEnabled(false)
+      }
+    }
+    void checkNotifications()
+    // The root layout may still be registering a token when this screen mounts.
+    const retry = setTimeout(() => void checkNotifications(), 5000)
+    return () => {
+      active = false
+      clearTimeout(retry)
+    }
   }, [])
 
   const enableNotifications = useCallback(async () => {
@@ -108,10 +131,12 @@ export function CaregiverHome() {
         setNotificationsEnabled(true)
         showToast('Notifications are on.')
       } else {
-        showToast('Notifications are still off. Allow them in phone settings.')
+        setNotificationsEnabled(false)
+        showToast('Push is not registered. Check permission and try again.')
       }
     } catch (error) {
       console.error('Error enabling notifications:', error)
+      setNotificationsEnabled(false)
       showToast('Could not turn on notifications.')
     }
   }, [showToast])

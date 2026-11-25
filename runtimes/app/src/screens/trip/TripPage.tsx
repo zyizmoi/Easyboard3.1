@@ -94,6 +94,8 @@ export function TripPage() {
   })
   const [journey, setJourney] = useState<Journey | null>(null)
   const [journeyLoaded, setJourneyLoaded] = useState(false)
+  const [loadFailed, setLoadFailed] = useState(false)
+  const [reloadToken, setReloadToken] = useState(0)
   const [stepIndex, setStepIndex] = useState(-1)
   const [isPractice, setIsPractice] = useState(initialPractice)
   const [preview, setPreview] = useState(false)
@@ -159,12 +161,14 @@ export function TripPage() {
       setJourneyLoaded(true)
       return
     }
+    setLoadFailed(false)
     let active = true
     let hadCachedMatch = false
 
     const apply = (match: Journey | null, savedPlaces: PWIDUser['savedPlaces']) => {
       setJourney(match)
       setJourneyLoaded(true)
+      setLoadFailed(false)
       const coords =
         params.lat && params.lng
           ? { lat: Number(params.lat), lng: Number(params.lng) }
@@ -192,7 +196,10 @@ export function TripPage() {
 
       // Do not leave "Loading this trip…" forever when Firebase is unreachable.
       const fallbackTimer = setTimeout(() => {
-        if (active && !hadCachedMatch) setJourneyLoaded(true)
+        if (active && !hadCachedMatch) {
+          setLoadFailed(true)
+          setJourneyLoaded(true)
+        }
       }, 5000)
 
       try {
@@ -207,7 +214,10 @@ export function TripPage() {
         apply(match, pwid?.savedPlaces ?? profile.savedPlaces)
       } catch (error) {
         console.error('Error loading journey:', error)
-        if (active) setJourneyLoaded(true)
+        if (active) {
+          setLoadFailed(true)
+          setJourneyLoaded(true)
+        }
       } finally {
         clearTimeout(fallbackTimer)
       }
@@ -217,7 +227,16 @@ export function TripPage() {
     return () => {
       active = false
     }
-  }, [hydrated, params.lat, params.lng, preview, profile.phoneNumber, profile.savedPlaces, requestedJourneyId])
+  }, [
+    hydrated,
+    params.lat,
+    params.lng,
+    preview,
+    profile.phoneNumber,
+    profile.savedPlaces,
+    reloadToken,
+    requestedJourneyId
+  ])
 
   useEffect(() => {
     if (!journey || resumed.current) return
@@ -385,6 +404,13 @@ export function TripPage() {
     }
   }, [preferences.privacyMode, preview, profile.phoneNumber, setDestination, setIsLocationSharing])
 
+  const retryJourneyLoad = useCallback(() => {
+    setJourney(null)
+    setJourneyLoaded(false)
+    setLoadFailed(false)
+    setReloadToken(value => value + 1)
+  }, [])
+
   const nextStep = () => {
     if (stepIndex < 0) return
     if (stepIndex + 1 >= steps.length) {
@@ -428,11 +454,21 @@ export function TripPage() {
         >
           <Ionicons name='map-outline' size={scale(34)} color={colors.brand} />
           <Text style={{ fontFamily: font.display, fontSize: scale(32), color: colors.ink }}>
-            This trip is not set up.
+            {loadFailed ? 'No signal.' : 'This trip is not set up.'}
           </Text>
           <Text style={{ fontSize: scale(16), lineHeight: bodyLine(16), color: colors.muted }}>
-            Ask your caregiver to add this place and the steps you take. Then come back here.
+            {loadFailed
+              ? 'We could not load this trip. Check your signal and try again.'
+              : 'Ask your caregiver to add this place and the steps you take. Then come back here.'}
           </Text>
+          {loadFailed ? (
+            <ActionButton
+              label='Try again'
+              icon='refresh-outline'
+              variant='secondary'
+              onPress={retryJourneyLoad}
+            />
+          ) : null}
           <ActionButton label='Call caregiver' icon='call-outline' onPress={handleCall} />
           <ActionButton label='Go home' variant='ghost' onPress={() => router.navigate('/home')} />
         </View>
@@ -518,9 +554,14 @@ export function TripPage() {
             }}
           >
             <Text style={{ fontSize: scale(14), lineHeight: bodyLine(14), color: colors.inkSoft }}>
-              Location is off. {sharingError || 'Allow location to share this trip.'}
+              {sharingError ||
+                (permissionDenied
+                  ? 'Location is off. Allow location to share this trip.'
+                  : 'Allow location to share this trip.')}
             </Text>
-            <ActionButton label='Try location again' variant='secondary' size='sm' onPress={retrySharing} />
+            {permissionDenied || !isLocationSharing ? (
+              <ActionButton label='Try location again' variant='secondary' size='sm' onPress={retrySharing} />
+            ) : null}
           </View>
         ) : null}
 

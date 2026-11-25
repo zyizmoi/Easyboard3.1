@@ -101,13 +101,18 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
           try {
             const profile = (await getUserData(phoneNumber)) as PWIDUser | null
             if (profile?.privacyMode) {
-              const remote = normalizePreferences(profile)
-              // The account is authoritative when it is newer than this device.
-              if (remote.privacyUpdatedAt >= next.privacyUpdatedAt) {
+              const remoteUpdatedAt = Math.max(
+                0,
+                Number(profile.privacyModeUpdatedAt) || 0
+              )
+              // The account stores privacyModeUpdatedAt; this device stores
+              // privacyUpdatedAt. Compare them directly instead of normalizing
+              // the profile, which has no easyRead or textScale fields.
+              if (remoteUpdatedAt >= next.privacyUpdatedAt) {
                 next = {
                   ...next,
-                  privacyMode: remote.privacyMode,
-                  privacyUpdatedAt: remote.privacyUpdatedAt
+                  privacyMode: profile.privacyMode,
+                  privacyUpdatedAt: remoteUpdatedAt
                 }
               }
             }

@@ -136,8 +136,10 @@ export const LocationSharingProvider: React.FC<{ children: React.ReactNode }> = 
       setIsLocationSharingState(false)
       return
     }
-    if (!permissionDeniedRef.current && !sharingError && !autoStopped) setIsLocationSharingState(true)
-  }, [activeTrip, autoStopped, preferences.privacyMode, preview, ready, sharingError, userType])
+    // A timeout or weak signal is transient. Do not let its banner block the
+    // next trip from starting the watch.
+    if (!permissionDeniedRef.current && !autoStopped) setIsLocationSharingState(true)
+  }, [activeTrip, autoStopped, preferences.privacyMode, preview, ready, userType])
 
   useEffect(() => {
     if (!isLocationSharing || !pwidPhoneNumber || userType !== 'PWID' || preview) {
@@ -210,8 +212,8 @@ export const LocationSharingProvider: React.FC<{ children: React.ReactNode }> = 
           // alive and keep the shared trip alive; a later fix can arrive.
           setSharingError(
             error.code === error.TIMEOUT
-              ? 'Still looking for your location. Stay where you are.'
-              : 'Location is weak right now. Still trying.'
+              ? 'Your location is updating slowly. Keep following your steps.'
+              : 'Your location is weak right now. Keep following your steps.'
           )
           return
         }

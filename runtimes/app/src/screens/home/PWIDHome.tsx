@@ -22,6 +22,7 @@ import {
   subscribeToTrip,
   type ActiveTrip
 } from '../../services/tripStore'
+import { cacheJourneys, getCachedJourneys } from '../../services/journeyCache'
 import { getUserData } from '../../services/userService'
 import { colors, font, radius, shadow, space } from '../../theme/tokens'
 import type { Journey, PWIDUser, SavedPlace } from '../../types'
@@ -78,10 +79,12 @@ export function PWIDHome() {
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [fetchFailed, setFetchFailed] = useState(false)
 
   const isWide = width >= 980
 
   const load = useCallback(async () => {
+    setFetchFailed(false)
     try {
       const stored = await getUserStorage()
       setUserData(stored)
@@ -89,34 +92,54 @@ export function PWIDHome() {
       const isPreview = Boolean((stored as { preview?: boolean } | null)?.preview)
 
       if (storedPwid?.phoneNumber && !isPreview) {
-        const ownData = (await getUserData(storedPwid.phoneNumber)) as PWIDUser | null
-        if (ownData) {
-          setJourneys(ownData.journeys ?? [])
-          // Saved places can change after sign-in. Pull-to-refresh should show
-          // the caregiver's latest copy, not the snapshot from onboarding.
-          setUserData(current =>
-            current
-              ? {
-                  ...current,
-                  name: ownData.name || current.name,
-                  savedPlaces: ownData.savedPlaces ?? (current as unknown as PWIDUser).savedPlaces
-                }
-              : current
-          )
+        const cached = await getCachedJourneys(storedPwid.phoneNumber)
+        if (cached.length > 0) {
+          // Show guided trips immediately. The account fetch below replaces
+          // them with the caregiver's latest copy when it succeeds.
+          setJourneys(cached)
+          setLoading(false)
+        }
+
+        try {
+          const ownData = (await getUserData(storedPwid.phoneNumber)) as PWIDUser | null
+          const nextJourneys = ownData?.journeys ?? []
+          setJourneys(nextJourneys)
+          void cacheJourneys(storedPwid.phoneNumber, nextJourneys)
+          if (ownData) {
+            // Saved places can change after sign-in. Pull-to-refresh should
+            // show the caregiver's latest copy, not the onboarding snapshot.
+            setUserData(current =>
+              current
+                ? {
+                    ...current,
+                    name: ownData.name || current.name,
+                    savedPlaces: ownData.savedPlaces ?? []
+                  }
+                : current
+            )
+          }
+        } catch (error) {
+          console.error('Error loading home trips:', error)
+          setFetchFailed(true)
         }
       }
 
       if (storedPwid?.caregiverPhone) {
         setCaregiver({ phone: storedPwid.caregiverPhone })
         if (!isPreview) {
-          const caregiverData = await getUserData(storedPwid.caregiverPhone)
-          if (caregiverData?.name) {
-            setCaregiver({ name: caregiverData.name, phone: storedPwid.caregiverPhone })
+          try {
+            const caregiverData = await getUserData(storedPwid.caregiverPhone)
+            if (caregiverData?.name) {
+              setCaregiver({ name: caregiverData.name, phone: storedPwid.caregiverPhone })
+            }
+          } catch (error) {
+            console.error('Could not load caregiver name:', error)
           }
         }
       }
     } catch (error) {
       console.error('Error loading home data:', error)
+      setFetchFailed(true)
       showToast('Could not refresh your places.')
     }
   }, [showToast])
@@ -331,11 +354,22 @@ export function PWIDHome() {
                 }}
               >
                 <Text style={{ fontSize: scale(17), fontWeight: '700', color: colors.ink }}>
-                  No places saved yet
+                  {fetchFailed ? 'No signal' : 'No places saved yet'}
                 </Text>
                 <Text style={{ fontSize: scale(15), lineHeight: bodyLine(15), color: colors.muted }}>
-                  Ask your caregiver to add Home, School, or Work.
+                  {fetchFailed
+                    ? 'We could not load your places. Try again when you have signal.'
+                    : 'Ask your caregiver to add Home, School, or Work.'}
                 </Text>
+                {fetchFailed ? (
+                  <ActionButton
+                    label='Try again'
+                    icon='refresh-outline'
+                    variant='secondary'
+                    size='sm'
+                    onPress={() => void refresh()}
+                  />
+                ) : null}
               </View>
             )}
           </View>
