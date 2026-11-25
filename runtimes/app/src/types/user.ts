@@ -63,6 +63,7 @@ export type PWIDUser = BaseUser & {
   journeys?: Journey[]
   activeTrip?: ActiveTrip | null
   privacyMode?: PrivacyMode
+  privacyModeUpdatedAt?: number
   location?: UserLocation // Real-time location
 }
 

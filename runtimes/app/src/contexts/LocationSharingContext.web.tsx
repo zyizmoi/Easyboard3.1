@@ -59,6 +59,10 @@ export const LocationSharingProvider: React.FC<{ children: React.ReactNode }> = 
     let cancelled = false
     const load = async () => {
       setIsLocationSharingState(false)
+      setPermissionDenied(false)
+      permissionDeniedRef.current = false
+      setSharingError(null)
+      setAutoStopped(false)
       const stored = await getUserStorage()
       if (cancelled) return
       setPwidPhoneNumber(stored?.phoneNumber || null)
@@ -168,6 +172,7 @@ export const LocationSharingProvider: React.FC<{ children: React.ReactNode }> = 
             notifiedShareRef.current = true
             void sendShareNotificationToCaregiver()
           }
+          setSharingError(null)
           await updatePWIDLocation(pwidPhoneNumber, {
             lat: position.coords.latitude,
             lng: position.coords.longitude,
@@ -200,15 +205,19 @@ export const LocationSharingProvider: React.FC<{ children: React.ReactNode }> = 
       error => {
         console.error('Geolocation error:', error)
         const denied = error.code === error.PERMISSION_DENIED
-        permissionDeniedRef.current = denied
-        setPermissionDenied(denied)
-        setSharingError(
-          denied
-            ? 'Location permission is off. Allow location in your browser settings.'
-            : error.code === error.TIMEOUT
-              ? 'Location took too long. Check your signal, then try again.'
-              : 'Location is unavailable right now.'
-        )
+        if (!denied) {
+          // Timeouts are routine indoors and in interchanges. Keep the watch
+          // alive and keep the shared trip alive; a later fix can arrive.
+          setSharingError(
+            error.code === error.TIMEOUT
+              ? 'Still looking for your location. Stay where you are.'
+              : 'Location is weak right now. Still trying.'
+          )
+          return
+        }
+        permissionDeniedRef.current = true
+        setPermissionDenied(true)
+        setSharingError('Location permission is off. Allow location in your browser settings.')
         setIsLocationSharingState(false)
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }

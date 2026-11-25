@@ -1,23 +1,31 @@
-/* global firebase, importScripts, clients */
-importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js')
-importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js')
+/* global self, clients */
+/* eslint-disable no-undef */
 
-firebase.initializeApp({
-  apiKey: 'AIzaSyALb75Yter7DvLpkbx_HoW_h_jD0a3eWZY',
-  authDomain: 'easyboard-sg.firebaseapp.com',
-  projectId: 'easyboard-sg',
-  messagingSenderId: '334251499398',
-  appId: '1:334251499398:web:066dccb38abc415f4a1607'
-})
+// This worker is intentionally project-agnostic. The app contains the Firebase
+// config and asks FCM for a token; the browser delivers the resulting web push
+// to this worker. That keeps staging and production from sharing a hard-coded
+// project.
 
-const messaging = firebase.messaging()
+self.addEventListener('push', event => {
+  let payload = {}
+  try {
+    payload = event.data ? event.data.json() : {}
+  } catch {
+    payload = { notification: { body: event.data ? event.data.text() : '' } }
+  }
 
-messaging.onBackgroundMessage(payload => {
   const notification = payload.notification || {}
-  self.registration.showNotification(notification.title || 'EasyBoard', {
-    body: notification.body || 'You have a new update.',
-    data: payload.data || {}
-  })
+  const data = payload.data || {}
+  const title = notification.title || data.title || 'EasyBoard'
+  const body = notification.body || data.body || 'You have a new update.'
+
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      data,
+      tag: data.type || 'easyboard'
+    })
+  )
 })
 
 self.addEventListener('notificationclick', event => {

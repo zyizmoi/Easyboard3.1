@@ -8,6 +8,7 @@ import { Text } from '../../components'
 import { ActionButton, AppFrame, Toast } from '../../components/ui'
 import { usePreferences } from '../../contexts/PreferencesContext'
 import { useToast } from '../../hooks/useToast'
+import notificationService from '../../services/notificationService'
 import { getUserStorage } from '../../services/storageService'
 import { isTripExpired, stageLabel, type ActiveTrip } from '../../services/tripStore'
 import {
@@ -18,7 +19,7 @@ import {
 import { colors, font, radius, shadow, space } from '../../theme/tokens'
 import type { PWIDUser, UserLocation } from '../../types'
 
-const BOARDING_WAIT_MS = 45_000
+const BOARDING_WAIT_MS = 3 * 60 * 1000
 const LOCATION_FRESH_MS = 2 * 60 * 1000
 
 export function CaregiverHome() {
@@ -33,6 +34,7 @@ export function CaregiverHome() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [now, setNow] = useState(() => Date.now())
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false)
 
   const isWide = width >= 980
   const narrow = width < 360
@@ -92,6 +94,28 @@ export function CaregiverHome() {
     return () => clearInterval(timer)
   }, [])
 
+  useEffect(() => {
+    notificationService
+      .checkPermissions()
+      .then(setNotificationsEnabled)
+      .catch(error => console.error('Error checking notification permission:', error))
+  }, [])
+
+  const enableNotifications = useCallback(async () => {
+    try {
+      const token = await notificationService.initialize()
+      if (token) {
+        setNotificationsEnabled(true)
+        showToast('Notifications are on.')
+      } else {
+        showToast('Notifications are still off. Allow them in phone settings.')
+      }
+    } catch (error) {
+      console.error('Error enabling notifications:', error)
+      showToast('Could not turn on notifications.')
+    }
+  }, [showToast])
+
   const refresh = useCallback(async () => {
     setRefreshing(true)
     await load()
@@ -114,6 +138,7 @@ export function CaregiverHome() {
     .filter(
       entry =>
         entry.trip?.stage === 'waiting' &&
+        entry.trip.stepId === 'wait' &&
         now - entry.trip.updatedAt > BOARDING_WAIT_MS
     )
 
@@ -151,6 +176,17 @@ export function CaregiverHome() {
             >
               People you support.
             </Text>
+
+            {!notificationsEnabled ? (
+              <ActionButton
+                label='Turn on notifications'
+                icon='notifications-outline'
+                variant='ghost'
+                size='sm'
+                onPress={enableNotifications}
+                accessibilityHint='Asks the phone for notification permission'
+              />
+            ) : null}
 
             {showPeople ? (
               <Pressable

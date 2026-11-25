@@ -89,8 +89,21 @@ export function PWIDHome() {
       const isPreview = Boolean((stored as { preview?: boolean } | null)?.preview)
 
       if (storedPwid?.phoneNumber && !isPreview) {
-        const ownData = await getUserData(storedPwid.phoneNumber)
-        setJourneys((ownData as PWIDUser | null)?.journeys ?? [])
+        const ownData = (await getUserData(storedPwid.phoneNumber)) as PWIDUser | null
+        if (ownData) {
+          setJourneys(ownData.journeys ?? [])
+          // Saved places can change after sign-in. Pull-to-refresh should show
+          // the caregiver's latest copy, not the snapshot from onboarding.
+          setUserData(current =>
+            current
+              ? {
+                  ...current,
+                  name: ownData.name || current.name,
+                  savedPlaces: ownData.savedPlaces ?? (current as unknown as PWIDUser).savedPlaces
+                }
+              : current
+          )
+        }
       }
 
       if (storedPwid?.caregiverPhone) {

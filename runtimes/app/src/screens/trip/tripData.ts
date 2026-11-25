@@ -57,7 +57,8 @@ const STEP_STAGE: Record<string, TripStage> = {
   sit: 'on-bus',
   ride: 'on-bus',
   alight: 'arriving',
-  arrive: 'arrived'
+  // The arrive step is still a walk. Only the final post-trip screen is arrived.
+  arrive: 'arriving'
 }
 
 /**

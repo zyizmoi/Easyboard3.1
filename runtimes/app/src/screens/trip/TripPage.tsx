@@ -27,6 +27,7 @@ import {
   type TripStage
 } from '../../services/tripStore'
 import { getUserStorage } from '../../services/storageService'
+import { cacheJourneys, getCachedJourneys } from '../../services/journeyCache'
 import { getUserData, setPWIDActiveTrip } from '../../services/userService'
 import { colors, font, radius, shadow, space } from '../../theme/tokens'
 import type { Journey, PWIDUser } from '../../types'
@@ -115,72 +116,118 @@ export function TripPage() {
   }, [])
 
   useEffect(() => {
+    let cancelled = false
     const load = async () => {
       const stored = await getUserStorage()
+      if (cancelled) return
       if (!stored) {
         setJourneyLoaded(true)
         return
       }
       const pwid = stored as unknown as PWIDUser
       const isPreview = Boolean((stored as { preview?: boolean }).preview)
-      let caregiverName = 'your caregiver'
-      if (pwid.caregiverPhone && !isPreview) {
-        const caregiver = await getUserData(pwid.caregiverPhone)
-        if (caregiver?.name) caregiverName = caregiver.name
-      }
-      setPreview(Boolean((stored as { preview?: boolean }).preview))
+      setPreview(isPreview)
+      // Set the saved profile immediately. The caregiver name is a nice-to-have
+      // and must not delay the trip or the help flow in a dead zone.
       setProfile({
         name: pwid.name?.trim() || '',
         phoneNumber: pwid.phoneNumber || '',
-        caregiverName,
+        caregiverName: 'your caregiver',
         caregiverPhone: pwid.caregiverPhone || '',
         savedPlaces: pwid.savedPlaces ?? []
       })
+
+      if (!pwid.caregiverPhone || isPreview) return
+      try {
+        const caregiver = await getUserData(pwid.caregiverPhone)
+        if (!cancelled && caregiver?.name) {
+          setProfile(current => ({ ...current, caregiverName: caregiver.name }))
+        }
+      } catch (error) {
+        console.error('Could not load caregiver name for trip:', error)
+      }
     }
     load().catch(error => console.error('Error loading trip profile:', error))
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   useEffect(() => {
-    if (!hydrated || !profile.phoneNumber || preview) {
-      if (preview) setJourneyLoaded(true)
+    if (!hydrated) return
+    if (!profile.phoneNumber || preview) {
+      setJourneyLoaded(true)
       return
     }
     let active = true
-    getUserData(profile.phoneNumber)
-      .then(data => {
+    let hadCachedMatch = false
+
+    const apply = (match: Journey | null, savedPlaces: PWIDUser['savedPlaces']) => {
+      setJourney(match)
+      setJourneyLoaded(true)
+      const coords =
+        params.lat && params.lng
+          ? { lat: Number(params.lat), lng: Number(params.lng) }
+          : match
+            ? match.destinationLatLng
+              ? { lat: match.destinationLatLng.latitude, lng: match.destinationLatLng.longitude }
+              : coordsForDestination(savedPlaces, match.destinationName)
+            : null
+      setDestinationCoords(
+        coords && Number.isFinite(coords.lat) && Number.isFinite(coords.lng) ? coords : null
+      )
+    }
+
+    const load = async () => {
+      // Read the cached copy first. This is what makes a trip startable when
+      // the phone has no signal at the bus stop.
+      const cached = await getCachedJourneys(profile.phoneNumber)
+      const cachedMatch = requestedJourneyId
+        ? cached.find(item => item.id === requestedJourneyId) ?? null
+        : null
+      if (active && cachedMatch) {
+        hadCachedMatch = true
+        apply(cachedMatch, profile.savedPlaces)
+      }
+
+      // Do not leave "Loading this trip…" forever when Firebase is unreachable.
+      const fallbackTimer = setTimeout(() => {
+        if (active && !hadCachedMatch) setJourneyLoaded(true)
+      }, 5000)
+
+      try {
+        const data = await getUserData(profile.phoneNumber)
         if (!active) return
         const pwid = data as PWIDUser | null
         const journeys = pwid?.journeys ?? []
-        // Journeys are identified by id. Name matching is deliberately not used:
-        // two places can share a name and a caregiver may have moved a route.
+        void cacheJourneys(profile.phoneNumber, journeys)
         const match = requestedJourneyId
           ? journeys.find(item => item.id === requestedJourneyId) ?? null
           : null
-        setJourney(match)
-        setJourneyLoaded(true)
-
-        const coords =
-          params.lat && params.lng
-            ? { lat: Number(params.lat), lng: Number(params.lng) }
-            : match
-              ? match.destinationLatLng
-                ? { lat: match.destinationLatLng.latitude, lng: match.destinationLatLng.longitude }
-                : coordsForDestination(pwid?.savedPlaces, match.destinationName)
-              : null
-        setDestinationCoords(coords && Number.isFinite(coords.lat) && Number.isFinite(coords.lng) ? coords : null)
-      })
-      .catch(error => {
+        apply(match, pwid?.savedPlaces ?? profile.savedPlaces)
+      } catch (error) {
         console.error('Error loading journey:', error)
         if (active) setJourneyLoaded(true)
-      })
+      } finally {
+        clearTimeout(fallbackTimer)
+      }
+    }
+
+    void load()
     return () => {
       active = false
     }
-  }, [hydrated, params.lat, params.lng, preview, profile.phoneNumber, requestedJourneyId])
+  }, [hydrated, params.lat, params.lng, preview, profile.phoneNumber, profile.savedPlaces, requestedJourneyId])
 
   useEffect(() => {
     if (!journey || resumed.current) return
     resumed.current = true
+    if (!existingTrip || existingTrip.journeyId !== journey.id) {
+      // A saved trip for a different journey must not donate its id or start
+      // time to this trip.
+      tripId.current = createTripId()
+      startedAt.current = 0
+    }
     if (existingTrip && existingTrip.journeyId === journey.id && !existingTrip.practice) {
       if (existingTrip.stage === 'arrived') {
         setStepIndex(journey.steps.length)
@@ -658,6 +705,7 @@ export function TripPage() {
               <TripStatusCard
                 destinationName={destinationName}
                 stage={stage}
+                stepId={currentStep.id}
                 isPractice={isPractice}
                 busNumber={journey.busNumber}
                 scale={scale}
@@ -878,6 +926,7 @@ function StoryView({
 function TripStatusCard({
   destinationName,
   stage,
+  stepId,
   isPractice,
   busNumber,
   scale,
@@ -885,6 +934,7 @@ function TripStatusCard({
 }: {
   destinationName: string
   stage: TripStage
+  stepId: string
   isPractice: boolean
   busNumber: string
   scale: (n: number) => number
@@ -897,14 +947,15 @@ function TripStatusCard({
       </Text>
       <Text style={{ fontSize: scale(19), fontWeight: '800', color: colors.ink }}>{destinationName}</Text>
       <Text style={{ fontSize: scale(14), lineHeight: bodyLine(14), color: colors.inkSoft }}>
-        {tripStatusText(stage, isPractice, busNumber)}
+        {tripStatusText(stage, isPractice, busNumber, stepId)}
       </Text>
     </View>
   )
 }
 
-function tripStatusText(stage: TripStage, isPractice: boolean, busNumber: string) {
+function tripStatusText(stage: TripStage, isPractice: boolean, busNumber: string, stepId: string) {
   if (isPractice) return 'Practice route. This does not publish a trip.'
+  if (stepId === 'arrive') return 'Almost there. Walk to your destination.'
   switch (stage) {
     case 'waiting':
       return 'Waiting at the bus stop.'

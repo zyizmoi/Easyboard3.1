@@ -34,24 +34,33 @@ export function HelpCardPage() {
   const [showMode, setShowMode] = useState(false)
 
   useEffect(() => {
+    let cancelled = false
     const load = async () => {
       const stored = await getUserStorage()
-      if (!stored) return
+      if (!stored || cancelled) return
       const pwid = stored as unknown as PWIDUser
-      let caregiverName = 'your caregiver'
-      if (pwid.caregiverPhone) {
-        const caregiver = await getUserData(pwid.caregiverPhone)
-        if (caregiver?.name) caregiverName = caregiver.name
-      }
+      // The number is already on this phone. Show it before any network call.
       setProfile({
         name: pwid.name?.trim() || '',
-        caregiverName,
-        // Always use the saved caregiver number. A deep link must never be
-        // able to put a different number on the card shown to a stranger.
+        caregiverName: 'your caregiver',
+        // A deep link must never be able to put a different number on the card.
         caregiverPhone: pwid.caregiverPhone || ''
       })
+
+      if (!pwid.caregiverPhone) return
+      try {
+        const caregiver = await getUserData(pwid.caregiverPhone)
+        if (!cancelled && caregiver?.name) {
+          setProfile(current => ({ ...current, caregiverName: caregiver.name }))
+        }
+      } catch (error) {
+        console.error('Could not load caregiver name for help card:', error)
+      }
     }
     load().catch(error => console.error('Error loading help card:', error))
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const destination = params.destination || 'my destination'

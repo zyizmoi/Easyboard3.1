@@ -21,12 +21,14 @@ export interface Preferences {
   easyRead: boolean
   textScale: number
   privacyMode: PrivacyMode
+  privacyUpdatedAt: number
 }
 
 const DEFAULT_PREFERENCES: Preferences = {
   easyRead: false,
   textScale: 1,
-  privacyMode: 'trip-only'
+  privacyMode: 'trip-only',
+  privacyUpdatedAt: 0
 }
 
 const LEGACY_STORAGE_KEY = 'eb-preferences'
@@ -41,7 +43,8 @@ function normalizePreferences(value: unknown): Preferences {
   return {
     easyRead: typeof parsed.easyRead === 'boolean' ? parsed.easyRead : DEFAULT_PREFERENCES.easyRead,
     textScale: Math.min(1.3, Math.max(1, Number(parsed.textScale) || 1)),
-    privacyMode
+    privacyMode,
+    privacyUpdatedAt: Math.max(0, Number(parsed.privacyUpdatedAt) || 0)
   }
 }
 
@@ -97,8 +100,16 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
         if (phoneNumber && stored?.userType === 'PWID' && !stored?.preview) {
           try {
             const profile = (await getUserData(phoneNumber)) as PWIDUser | null
-            if (!perUser && profile?.privacyMode) {
-              next = { ...next, privacyMode: normalizePreferences(profile).privacyMode }
+            if (profile?.privacyMode) {
+              const remote = normalizePreferences(profile)
+              // The account is authoritative when it is newer than this device.
+              if (remote.privacyUpdatedAt >= next.privacyUpdatedAt) {
+                next = {
+                  ...next,
+                  privacyMode: remote.privacyMode,
+                  privacyUpdatedAt: remote.privacyUpdatedAt
+                }
+              }
             }
           } catch (error) {
             console.error('Error loading privacy mode:', error)
@@ -137,13 +148,22 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
     if (!ready || !owner || userType !== 'PWID' || preview) return
     if (lastSyncedMode.current === preferences.privacyMode) return
     lastSyncedMode.current = preferences.privacyMode
-    updateUserData(owner, { privacyMode: preferences.privacyMode }).catch(error => {
+    updateUserData(owner, {
+      privacyMode: preferences.privacyMode,
+      privacyModeUpdatedAt: preferences.privacyUpdatedAt
+    }).catch(error => {
       console.error('Error syncing privacy mode:', error)
     })
-  }, [owner, preferences.privacyMode, preview, ready, userType])
+  }, [owner, preferences.privacyMode, preferences.privacyUpdatedAt, preview, ready, userType])
 
   const updatePreferences = useCallback((patch: Partial<Preferences>) => {
-    setPreferences(current => normalizePreferences({ ...current, ...patch }))
+    setPreferences(current => {
+      const next = normalizePreferences({ ...current, ...patch })
+      if (patch.privacyMode && patch.privacyMode !== current.privacyMode) {
+        next.privacyUpdatedAt = Date.now()
+      }
+      return next
+    })
   }, [])
 
   const scale = useCallback(

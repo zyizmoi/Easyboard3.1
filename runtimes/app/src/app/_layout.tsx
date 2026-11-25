@@ -26,30 +26,36 @@ function RootLayoutNav() {
     routerRef.current = router
   }, [router])
 
-  // Initialize notification service
+  // Set navigation callbacks and foreground listeners. Permission is requested
+  // only from an explicit button, never during sign-in.
   useEffect(() => {
-    // Set navigation callback for notification service
     setNavigationCallback((screen, params) =>
       routerRef.current.navigate({ pathname: screen, params })
     )
 
-    const initializeNotifications = async () => {
-      try {
-        await notificationService.initialize()
-        notificationService.setupNotificationListeners()
-        console.log('Notification service initialized successfully')
-      } catch (error) {
-        console.error('Failed to initialize notification service:', error)
-      }
+    let unsubscribe: (() => void) | undefined
+    try {
+      unsubscribe = notificationService.setupNotificationListeners()
+    } catch (error) {
+      console.error('Failed to set up notification listeners:', error)
     }
 
-    // Only initialize when user is authenticated
-    // Web push needs a production service worker. Native dev builds can
-    // register directly. Localhost web often has no push service.
-    if (hasAuthen && (Platform.OS !== 'web' || !__DEV__)) {
-      initializeNotifications()
+    if (hasAuthen) {
+      notificationService
+        .checkPermissions()
+        .then(granted => {
+          // Local web development has no push service. Production web and
+          // native builds register silently after permission is granted.
+          if (granted && (Platform.OS !== 'web' || !__DEV__)) {
+            return notificationService.initialize()
+          }
+          return null
+        })
+        .catch(error => console.error('Failed to initialize notifications:', error))
     }
-  }, [hasAuthen, userType]) // Re-initialize when user changes
+
+    return () => unsubscribe?.()
+  }, [hasAuthen, userType])
 
   // Use Stack to enable animations between top-level routes
   const stack = (

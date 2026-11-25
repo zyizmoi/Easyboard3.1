@@ -28,6 +28,7 @@ import {
   uploadLocationPhoto
 } from '../../services/storageService'
 import { getPWIDsByCaregiverPhone } from '../../services/userService'
+import { cacheJourneys, getCachedJourneys } from '../../services/journeyCache'
 import { getDefaultJourneySteps, getStoryStepIcon } from '../trip/tripData'
 import { colors, font, radius, shadow, space } from '../../theme/tokens'
 import type { Journey, JourneyStep, PWIDUser } from '../../types'
@@ -112,10 +113,13 @@ export function CaregiverJourneysPage() {
             setSelected(match)
             setScreen('journeys')
             try {
-              setJourneys(await getJourneys(match.phoneNumber))
+              const list = await getJourneys(match.phoneNumber)
+              setJourneys(list)
+              void cacheJourneys(match.phoneNumber, list)
             } catch (error) {
               console.error('Error loading journeys:', error)
-              setJourneys(match.journeys ?? [])
+              const cached = await getCachedJourneys(match.phoneNumber)
+              setJourneys(cached.length > 0 ? cached : match.journeys ?? [])
             }
           }
         }
@@ -136,9 +140,11 @@ export function CaregiverJourneysPage() {
       try {
         const list = await getJourneys(person.phoneNumber)
         setJourneys(list)
+        void cacheJourneys(person.phoneNumber, list)
       } catch (error) {
         console.error('Error loading journeys:', error)
-        setJourneys(person.journeys ?? [])
+        const cached = await getCachedJourneys(person.phoneNumber)
+        setJourneys(cached.length > 0 ? cached : person.journeys ?? [])
         showToast('Could not refresh journeys.')
       }
     },
@@ -261,6 +267,7 @@ export function CaregiverJourneysPage() {
       }
       const next = await saveJourney(selected.phoneNumber, journey)
       setJourneys(next)
+      void cacheJourneys(selected.phoneNumber, next)
       setDraft(journey)
       setScreen('journeys')
       showToast('Journey saved.')
@@ -277,6 +284,7 @@ export function CaregiverJourneysPage() {
     try {
       const next = await deleteJourney(selected.phoneNumber, journeyId)
       setJourneys(next)
+      void cacheJourneys(selected.phoneNumber, next)
       setDeleteConfirmId(null)
       showToast('Journey deleted.')
     } catch (error) {

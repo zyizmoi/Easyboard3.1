@@ -11,7 +11,7 @@ import { useLocationSharing } from '../../contexts/LocationSharingContext'
 import { useToast } from '../../hooks/useToast'
 import { getActiveTrip, stageLabel, subscribeToTrip } from '../../services/tripStore'
 import { completeLogout, getUserStorage } from '../../services/storageService'
-import { setPWIDActiveTrip } from '../../services/userService'
+import { setPWIDActiveTrip, stopPWIDLocationSharing } from '../../services/userService'
 import { colors, font, radius, shadow, space } from '../../theme/tokens'
 
 const MODES: { id: PrivacyMode; title: string; description: string }[] = [
@@ -28,7 +28,7 @@ const MODES: { id: PrivacyMode; title: string; description: string }[] = [
   {
     id: 'paused',
     title: 'Paused',
-    description: 'Nothing is shared.'
+    description: 'New locations stop. The last shared place stays visible.'
   }
 ]
 
@@ -51,7 +51,7 @@ export function PrivacyPage() {
   const previewTone = hasActiveTrip ? colors.success : colors.muted
   const previewTitle =
     preferences.privacyMode === 'paused'
-      ? 'Nothing shared'
+      ? 'Paused'
       : hasActiveTrip
         ? preferences.privacyMode === 'always'
           ? 'Location on'
@@ -65,7 +65,7 @@ export function PrivacyPage() {
       : preferences.privacyMode === 'always'
         ? 'Sharing is on.'
         : preferences.privacyMode === 'paused'
-          ? 'Sharing is paused.'
+          ? 'New locations stop. The last shared place stays visible.'
           : 'No active trip.'
 
   const setMode = (mode: PrivacyMode) => {
@@ -91,6 +91,20 @@ export function PrivacyPage() {
   const handleLogout = async () => {
     try {
       setLoggingOut(true)
+      // Clear the shared trip while the auth token still exists. signOut()
+      // below would make these writes fail.
+      try {
+        const stored = await getUserStorage()
+        if (stored?.phoneNumber && stored.userType === 'PWID' && !stored.preview) {
+          setIsLocationSharing(false)
+          await Promise.all([
+            setPWIDActiveTrip(stored.phoneNumber, null),
+            stopPWIDLocationSharing(stored.phoneNumber)
+          ])
+        }
+      } catch (error) {
+        console.error('Error clearing shared trip before logout:', error)
+      }
       await completeLogout()
       setAuthentication(false, undefined)
       router.navigate('/')
@@ -102,7 +116,7 @@ export function PrivacyPage() {
   }
 
   return (
-    <AppFrame statusAction='none'>
+    <AppFrame statusAction='none' statusLabel={canChoose ? undefined : 'Caregiver view'}>
       <View style={{ maxWidth: 820, marginHorizontal: 'auto', width: '100%', gap: space.lg }}>
         <View style={{ gap: 8 }}>
           <Text
@@ -126,21 +140,22 @@ export function PrivacyPage() {
               color: colors.ink
             }}
           >
-            What you share
+            {canChoose ? 'What you share' : 'Traveller privacy'}
           </Text>
           <Text style={{ fontSize: scale(16), lineHeight: bodyLine(16), color: colors.muted }}>
-            Only you can change it.
+            {canChoose ? 'Only you can change it.' : 'Each traveller sets this on their own phone.'}
           </Text>
         </View>
 
         {!canChoose ? (
           <View style={{ backgroundColor: colors.surfaceMuted, borderRadius: radius.md, padding: 14 }}>
             <Text style={{ fontSize: scale(14), lineHeight: bodyLine(14), color: colors.muted }}>
-              This choice belongs to the traveller. A caregiver can see it, but cannot change it here.
+              Privacy is set on the traveller’s phone. Their card in People shows the current mode. You cannot change it here.
             </Text>
           </View>
         ) : null}
 
+        {canChoose ? (
         <View style={{ gap: 10 }}>
           {MODES.map(mode => {
             const selected = preferences.privacyMode === mode.id
@@ -148,10 +163,9 @@ export function PrivacyPage() {
               <Pressable
                 key={mode.id}
                 accessibilityRole='radio'
-                accessibilityState={{ checked: selected, disabled: !canChoose }}
+                accessibilityState={{ checked: selected }}
                 accessibilityLabel={`${mode.title}. ${mode.description}`}
                 onPress={() => setMode(mode.id)}
-                disabled={!canChoose}
                 style={({ pressed }) => ({
                   flexDirection: 'row',
                   alignItems: 'flex-start',
@@ -193,7 +207,9 @@ export function PrivacyPage() {
             )
           })}
         </View>
+        ) : null}
 
+        {canChoose ? (
         <View
           style={{
             backgroundColor: colors.surface,
@@ -226,6 +242,7 @@ export function PrivacyPage() {
             </Text>
           </View>
         </View>
+        ) : null}
 
         <View
           style={{
