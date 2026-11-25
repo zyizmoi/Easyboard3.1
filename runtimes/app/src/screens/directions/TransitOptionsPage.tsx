@@ -109,11 +109,22 @@ export function TransitOptionsPage() {
       } else {
         setErrorMessage('No routes found to your destination')
       }
-    } catch (e: any) {
-      console.error('[TransitOptionsPage] Error:', e)
-      if (e?.message?.includes('permission')) {
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e)
+      if (message.includes('permission')) {
         setErrorMessage('Location permission is required to get directions')
+      } else if (
+        message.includes('Timed out') ||
+        message.includes('Current location unavailable')
+      ) {
+        // A slow or missing fix is a normal condition, not an app crash.
+        setErrorMessage(
+          'We could not get your location. Move near a window, then tap Retry.'
+        )
+      } else if (message.includes('not supported')) {
+        setErrorMessage('This browser cannot share your location.')
       } else {
+        console.error('[TransitOptionsPage] Error:', e)
         setErrorMessage("Error - can't get current location or directions")
       }
     } finally {
