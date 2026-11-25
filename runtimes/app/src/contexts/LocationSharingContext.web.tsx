@@ -1,9 +1,11 @@
 'use client'
 
-import React, { createContext, useCallback, useContext, useState } from 'react'
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import notificationService from '../services/notificationService'
 import { usePreferences } from './PreferencesContext'
 import { getUserStorage } from '../services/storageService'
+import { subscribeSessionChanged } from '../services/sessionEvents'
+import { getActiveTrip, subscribeToTrip, type ActiveTrip } from '../services/tripStore'
 import {
   getUserData,
   stopPWIDLocationSharing,
@@ -16,34 +18,65 @@ type LocationSharingContextType = {
   setIsLocationSharing: (share: boolean) => void
   setDestination: (dest: { lat: number; lng: number } | null) => void
   destination: { lat: number; lng: number } | null
+  permissionDenied: boolean
+  sharingError: string | null
+  autoStopped: boolean
+  retrySharing: () => void
+  resetAutoStop: () => void
 }
 
-const LocationSharingContext = createContext<
-  LocationSharingContextType | undefined
->(undefined)
+const LocationSharingContext = createContext<LocationSharingContextType | undefined>(undefined)
 
-export const LocationSharingProvider: React.FC<{
-  children: React.ReactNode
-}> = ({ children }) => {
-  const { preferences } = usePreferences()
-  const [isLocationSharing, setIsLocationSharingState] = useState(
-    preferences.privacyMode === 'always'
-  )
+export const LocationSharingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { preferences, ready } = usePreferences()
+  const [isLocationSharing, setIsLocationSharingState] = useState(false)
   const [pwidPhoneNumber, setPwidPhoneNumber] = useState<string | null>(null)
-  const [destination, setDestinationState] = useState<{
-    lat: number
-    lng: number
-  } | null>(null)
-  const watchIdRef = React.useRef<number | null>(null)
+  const [userType, setUserType] = useState<string | undefined>()
+  const [preview, setPreview] = useState(false)
+  const [permissionDenied, setPermissionDenied] = useState(false)
+  const [sharingError, setSharingError] = useState<string | null>(null)
+  const [autoStopped, setAutoStopped] = useState(false)
+  const [activeTrip, setActiveTrip] = useState<ActiveTrip | null>(getActiveTrip)
+  const [destination, setDestinationState] = useState<{ lat: number; lng: number } | null>(null)
+  const watchIdRef = useRef<number | null>(null)
+  const notifiedShareRef = useRef(false)
+  const stopReasonRef = useRef<string | undefined>(undefined)
+  const permissionDeniedRef = useRef(false)
+  const destinationRef = useRef<{ lat: number; lng: number } | null>(null)
+  const privacyModeRef = useRef(preferences.privacyMode)
 
-  React.useEffect(() => {
-    const getPhoneNumber = async () => {
-      const userData = await getUserStorage()
-      if (userData) {
-        setPwidPhoneNumber(userData.phoneNumber)
+  useEffect(() => subscribeToTrip(setActiveTrip), [])
+
+  useEffect(() => {
+    destinationRef.current = destination
+  }, [destination])
+
+  useEffect(() => {
+    privacyModeRef.current = preferences.privacyMode
+  }, [preferences.privacyMode])
+
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      setIsLocationSharingState(false)
+      const stored = await getUserStorage()
+      if (cancelled) return
+      setPwidPhoneNumber(stored?.phoneNumber || null)
+      setUserType(stored?.userType)
+      setPreview(Boolean(stored?.preview))
+      if (stored?.userType !== 'PWID') {
+        setIsLocationSharingState(false)
+        setPermissionDenied(false)
+        permissionDeniedRef.current = false
+        setSharingError(null)
       }
     }
-    getPhoneNumber()
+    load().catch(error => console.error('Error loading location session:', error))
+    const unsubscribe = subscribeSessionChanged(load)
+    return () => {
+      cancelled = true
+      unsubscribe()
+    }
   }, [])
 
   const sendShareNotificationToCaregiver = useCallback(async () => {
@@ -53,10 +86,7 @@ export const LocationSharingProvider: React.FC<{
       if (pwidUser && pwidUser.userType === 'PWID') {
         const pwid = pwidUser as PWIDUser
         if (pwid.caregiverPhone) {
-          await notificationService.sendLocationShareNotification(
-            pwidPhoneNumber,
-            pwid.caregiverPhone
-          )
+          await notificationService.sendLocationShareNotification(pwidPhoneNumber, pwid.caregiverPhone)
         }
       }
     } catch (error) {
@@ -75,7 +105,7 @@ export const LocationSharingProvider: React.FC<{
             await notificationService.sendLocationStopNotification(
               pwidPhoneNumber,
               pwid.caregiverPhone,
-              reason || 'Location sharing stopped manually'
+              reason || 'Location sharing stopped'
             )
           }
         }
@@ -86,9 +116,27 @@ export const LocationSharingProvider: React.FC<{
     [pwidPhoneNumber]
   )
 
-  React.useEffect(() => {
-    if (!isLocationSharing || !pwidPhoneNumber) {
-      // Stop sharing
+  // Start or stop according to the user's saved mode. This does not depend on
+  // the current sharing boolean, so a permission error cannot cause a retry loop.
+  useEffect(() => {
+    if (!ready) return
+    if (preview || userType !== 'PWID' || preferences.privacyMode === 'paused') {
+      setIsLocationSharingState(false)
+      return
+    }
+    const tripIsActive = Boolean(activeTrip && activeTrip.stage !== 'arrived')
+    const shouldShare =
+      preferences.privacyMode === 'always' ||
+      (preferences.privacyMode === 'trip-only' && tripIsActive)
+    if (!shouldShare) {
+      setIsLocationSharingState(false)
+      return
+    }
+    if (!permissionDeniedRef.current && !sharingError && !autoStopped) setIsLocationSharingState(true)
+  }, [activeTrip, autoStopped, preferences.privacyMode, preview, ready, sharingError, userType])
+
+  useEffect(() => {
+    if (!isLocationSharing || !pwidPhoneNumber || userType !== 'PWID' || preview) {
       const wasSharing = watchIdRef.current !== null
       if (watchIdRef.current !== null) {
         navigator.geolocation.clearWatch(watchIdRef.current)
@@ -96,107 +144,129 @@ export const LocationSharingProvider: React.FC<{
       }
       if (pwidPhoneNumber && wasSharing) {
         stopPWIDLocationSharing(pwidPhoneNumber).catch(() => {})
+        if (notifiedShareRef.current) {
+          void sendStopNotificationToCaregiver(stopReasonRef.current)
+          notifiedShareRef.current = false
+        }
+        stopReasonRef.current = undefined
       }
       return
     }
 
-    // Start sharing
     if (!navigator.geolocation) {
-      console.info('Geolocation is not supported in this browser')
+      setSharingError('This browser does not support location.')
+      setPermissionDenied(true)
+      permissionDeniedRef.current = true
       setIsLocationSharingState(false)
       return
     }
 
-    // Send notification when sharing starts
-    sendShareNotificationToCaregiver()
-
     watchIdRef.current = navigator.geolocation.watchPosition(
-      async (position) => {
+      async position => {
         try {
-          await updatePWIDLocation(pwidPhoneNumber!, {
+          if (!notifiedShareRef.current) {
+            notifiedShareRef.current = true
+            void sendShareNotificationToCaregiver()
+          }
+          await updatePWIDLocation(pwidPhoneNumber, {
             lat: position.coords.latitude,
             lng: position.coords.longitude,
             updatedAt: Date.now(),
             isSharing: true
           })
 
-          // Check if arrived at destination
-          if (destination) {
+          const target = destinationRef.current
+          if (target) {
             const distance = getDistanceFromLatLonInMeters(
               position.coords.latitude,
               position.coords.longitude,
-              destination.lat,
-              destination.lng
+              target.lat,
+              target.lng
             )
             if (distance < 20) {
-              // 20 meters threshold
-              setIsLocationSharingState(false)
-              await sendStopNotificationToCaregiver('Arrived at destination')
               setDestinationState(null)
+              if (privacyModeRef.current !== 'always') {
+                stopReasonRef.current = 'Arrived at destination'
+                setAutoStopped(true)
+                setIsLocationSharingState(false)
+              }
             }
           }
         } catch (error) {
           console.error('Error updating location:', error)
+          setSharingError('Could not update your location.')
         }
       },
-      (error) => {
-        console.info('Geolocation unavailable; location sharing paused.', error)
+      error => {
+        console.error('Geolocation error:', error)
+        const denied = error.code === error.PERMISSION_DENIED
+        permissionDeniedRef.current = denied
+        setPermissionDenied(denied)
+        setSharingError(
+          denied
+            ? 'Location permission is off. Allow location in your browser settings.'
+            : error.code === error.TIMEOUT
+              ? 'Location took too long. Check your signal, then try again.'
+              : 'Location is unavailable right now.'
+        )
         setIsLocationSharingState(false)
       },
-      {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 10000
-      }
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
     )
 
     return () => {
-      const wasSharing = watchIdRef.current !== null
       if (watchIdRef.current !== null) {
         navigator.geolocation.clearWatch(watchIdRef.current)
         watchIdRef.current = null
       }
-      if (pwidPhoneNumber && wasSharing) {
+      if (pwidPhoneNumber) {
         stopPWIDLocationSharing(pwidPhoneNumber).catch(() => {})
-        sendStopNotificationToCaregiver().catch(() => {})
+        if (notifiedShareRef.current) {
+          void sendStopNotificationToCaregiver(stopReasonRef.current)
+          notifiedShareRef.current = false
+        }
+        stopReasonRef.current = undefined
       }
     }
   }, [
     isLocationSharing,
     pwidPhoneNumber,
-    destination,
     sendShareNotificationToCaregiver,
-    sendStopNotificationToCaregiver
+    sendStopNotificationToCaregiver,
+    preview,
+    userType
   ])
 
   const setIsLocationSharing = useCallback((share: boolean) => {
+    if (share && permissionDeniedRef.current) return
     setIsLocationSharingState(share)
   }, [])
 
-  const setDestination = useCallback(
-    (dest: { lat: number; lng: number } | null) => {
-      setDestinationState(dest)
-    },
-    []
-  )
+  const resetAutoStop = useCallback(() => setAutoStopped(false), [])
 
-  function getDistanceFromLatLonInMeters(
-    lat1: number,
-    lng1: number,
-    lat2: number,
-    lng2: number
-  ): number {
-    const R = 6371e3 // meters
+  const retrySharing = useCallback(() => {
+    setAutoStopped(false)
+    permissionDeniedRef.current = false
+    setPermissionDenied(false)
+    setSharingError(null)
+    setIsLocationSharingState(true)
+  }, [])
+
+  const setDestination = useCallback((dest: { lat: number; lng: number } | null) => {
+    if (dest) setAutoStopped(false)
+    setDestinationState(dest)
+  }, [])
+
+  function getDistanceFromLatLonInMeters(lat1: number, lng1: number, lat2: number, lng2: number): number {
+    const R = 6371e3
     const φ1 = (lat1 * Math.PI) / 180
     const φ2 = (lat2 * Math.PI) / 180
     const Δφ = ((lat2 - lat1) * Math.PI) / 180
     const Δλ = ((lng2 - lng1) * Math.PI) / 180
-
     const a =
       Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
       Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2)
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-
     return R * c
   }
 
@@ -206,7 +276,12 @@ export const LocationSharingProvider: React.FC<{
         isLocationSharing,
         setIsLocationSharing,
         destination,
-        setDestination
+        setDestination,
+        permissionDenied,
+        sharingError,
+        autoStopped,
+        resetAutoStop,
+        retrySharing
       }}
     >
       {children}
@@ -217,9 +292,7 @@ export const LocationSharingProvider: React.FC<{
 export const useLocationSharing = () => {
   const context = useContext(LocationSharingContext)
   if (!context) {
-    throw new Error(
-      'useLocationSharing must be used within a LocationSharingProvider'
-    )
+    throw new Error('useLocationSharing must be used within a LocationSharingProvider')
   }
   return context
 }

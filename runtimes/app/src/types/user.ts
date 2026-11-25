@@ -4,6 +4,8 @@ import type { ActiveTrip } from '../services/tripStore'
 
 export type UserType = 'PWID' | 'CAREGIVER'
 
+export type PrivacyMode = 'trip-only' | 'always' | 'paused'
+
 export interface LatLng {
   latitude: number
   longitude: number
@@ -50,6 +52,7 @@ export interface Journey {
   destinationName: string
   originName: string
   busNumber: string
+  destinationLatLng?: LatLng
   steps: JourneyStep[]
   updatedAt: number
 }
@@ -59,6 +62,7 @@ export type PWIDUser = BaseUser & {
   savedPlaces?: SavedPlace[]
   journeys?: Journey[]
   activeTrip?: ActiveTrip | null
+  privacyMode?: PrivacyMode
   location?: UserLocation // Real-time location
 }
 
@@ -72,4 +76,5 @@ export type UserStorage = Omit<
 > & {
   userType: UserType | undefined
   loggedAt: number // Unix timestamp when user last logged in
+  preview?: boolean
 }

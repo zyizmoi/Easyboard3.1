@@ -10,7 +10,8 @@ import { usePreferences, type PrivacyMode } from '../../contexts/PreferencesCont
 import { useLocationSharing } from '../../contexts/LocationSharingContext'
 import { useToast } from '../../hooks/useToast'
 import { getActiveTrip, stageLabel, subscribeToTrip } from '../../services/tripStore'
-import { completeLogout } from '../../services/storageService'
+import { completeLogout, getUserStorage } from '../../services/storageService'
+import { setPWIDActiveTrip } from '../../services/userService'
 import { colors, font, radius, shadow, space } from '../../theme/tokens'
 
 const MODES: { id: PrivacyMode; title: string; description: string }[] = [
@@ -33,9 +34,10 @@ const MODES: { id: PrivacyMode; title: string; description: string }[] = [
 
 export function PrivacyPage() {
   const router = useRouter()
-  const { setAuthentication } = useAuth()
+  const { setAuthentication, userType } = useAuth()
   const { preferences, updatePreferences, scale, bodyLine } = usePreferences()
   const { setIsLocationSharing } = useLocationSharing()
+  const canChoose = userType !== 'CAREGIVER'
   const { message, showToast } = useToast()
   const [signOutOpen, setSignOutOpen] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)
@@ -70,6 +72,13 @@ export function PrivacyPage() {
     updatePreferences({ privacyMode: mode })
     if (mode === 'paused') {
       setIsLocationSharing(false)
+      getUserStorage()
+        .then(stored => {
+          if (stored?.preview) return undefined
+          if (stored?.phoneNumber) return setPWIDActiveTrip(stored.phoneNumber, null)
+          return undefined
+        })
+        .catch(error => console.error('Error clearing paused trip:', error))
     } else if (mode === 'always') {
       setIsLocationSharing(true)
     } else if (trip && trip.stage !== 'arrived') {
@@ -124,6 +133,14 @@ export function PrivacyPage() {
           </Text>
         </View>
 
+        {!canChoose ? (
+          <View style={{ backgroundColor: colors.surfaceMuted, borderRadius: radius.md, padding: 14 }}>
+            <Text style={{ fontSize: scale(14), lineHeight: bodyLine(14), color: colors.muted }}>
+              This choice belongs to the traveller. A caregiver can see it, but cannot change it here.
+            </Text>
+          </View>
+        ) : null}
+
         <View style={{ gap: 10 }}>
           {MODES.map(mode => {
             const selected = preferences.privacyMode === mode.id
@@ -131,9 +148,10 @@ export function PrivacyPage() {
               <Pressable
                 key={mode.id}
                 accessibilityRole='radio'
-                accessibilityState={{ checked: selected }}
+                accessibilityState={{ checked: selected, disabled: !canChoose }}
                 accessibilityLabel={`${mode.title}. ${mode.description}`}
                 onPress={() => setMode(mode.id)}
+                disabled={!canChoose}
                 style={({ pressed }) => ({
                   flexDirection: 'row',
                   alignItems: 'flex-start',

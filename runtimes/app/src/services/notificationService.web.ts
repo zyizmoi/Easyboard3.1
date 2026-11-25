@@ -66,8 +66,12 @@ export const notificationService: INotificationService = {
       const permission = await window.Notification.requestPermission()
       if (permission !== 'granted') return null
 
+      const registration = await navigator.serviceWorker.register(
+        '/firebase-messaging-sw.js'
+      )
       const fcmToken = await getToken(messagingInstance, {
-        vapidKey: process.env.EXPO_PUBLIC_FIREBASE_VAPID_KEY
+        vapidKey: process.env.EXPO_PUBLIC_FIREBASE_VAPID_KEY,
+        serviceWorkerRegistration: registration
       })
 
       if (fcmToken) {

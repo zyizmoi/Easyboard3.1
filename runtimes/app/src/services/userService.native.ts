@@ -7,6 +7,7 @@ import {
   orderByChild,
   query,
   ref,
+  runTransaction,
   set,
   update,
   type DataSnapshot
@@ -15,12 +16,27 @@ import { getDeviceName } from 'react-native-device-info'
 import type { ActiveTrip } from './tripStore'
 import type {
   CaregiverUser,
+  Journey,
   PWIDUser,
   UserData,
   UserLocation,
   UserType
 } from '../types'
 import type { IUserService } from './userService'
+function cleanFirebaseValue<T>(value: T): T {
+  if (Array.isArray(value)) {
+    return value.map(item => cleanFirebaseValue(item)) as T
+  }
+  if (value && typeof value === 'object') {
+    const clean: Record<string, unknown> = {}
+    Object.entries(value as Record<string, unknown>).forEach(([key, item]) => {
+      if (item !== undefined) clean[key] = cleanFirebaseValue(item)
+    })
+    return clean as T
+  }
+  return value
+}
+
 
 /**
  * Ensure Firebase is initialized before using Database
@@ -205,17 +221,45 @@ export const userService: IUserService = {
     return pwidUsers
   },
 
+  savePWIDJourney: async (phoneNumber: string, journey: Journey) => {
+    const journeysRef = ref(getDatabase(), `users/${phoneNumber}/journeys`)
+    const result = await runTransaction(journeysRef, current => {
+      const list: Journey[] = Array.isArray(current)
+        ? current
+        : current && typeof current === 'object'
+          ? Object.values(current as Record<string, Journey>)
+          : []
+      return [journey, ...list.filter(item => item.id !== journey.id)].sort(
+        (a, b) => b.updatedAt - a.updatedAt
+      )
+    })
+    const value = result.snapshot.val()
+    return Array.isArray(value) ? value : value ? Object.values(value as Record<string, Journey>) : []
+  },
+
+  deletePWIDJourney: async (phoneNumber: string, journeyId: string) => {
+    const journeysRef = ref(getDatabase(), `users/${phoneNumber}/journeys`)
+    const result = await runTransaction(journeysRef, current => {
+      const list: Journey[] = Array.isArray(current)
+        ? current
+        : current && typeof current === 'object'
+          ? Object.values(current as Record<string, Journey>)
+          : []
+      return list.filter(item => item.id !== journeyId)
+    })
+    const value = result.snapshot.val()
+    return Array.isArray(value) ? value : value ? Object.values(value as Record<string, Journey>) : []
+  },
+
   updateUserData: async (phoneNumber: string, updates: Partial<UserData>) => {
     try {
       const userRef = ref(getDatabase(), `users/${phoneNumber}`)
-      const snapshot = await get(userRef)
-      const timestamp = Date.now()
-      const updatedData = {
-        ...(snapshot.exists() ? snapshot.val() : {}),
+      // Only write the fields the caller changed. A read-modify-write here
+      // would overwrite a fresher location or active trip from another device.
+      await update(userRef, cleanFirebaseValue({
         ...updates,
-        updatedAt: timestamp
-      }
-      await set(userRef, updatedData)
+        updatedAt: Date.now()
+      }))
     } catch (error) {
       console.error('Error updating user data:', error)
       throw error
@@ -234,5 +278,7 @@ export const getFCMToken = userService.getFCMToken
 export const listenToPWIDLocation = userService.listenToPWIDLocation
 export const getPWIDsByCaregiverPhone = userService.getPWIDsByCaregiverPhone
 export const updateUserData = userService.updateUserData
+export const savePWIDJourney = userService.savePWIDJourney
+export const deletePWIDJourney = userService.deletePWIDJourney
 export const setPWIDActiveTrip = userService.setPWIDActiveTrip
 export const subscribeToActiveTrip = userService.subscribeToActiveTrip

@@ -647,7 +647,7 @@
           <h3 style="margin-top:10px">Five changes that matter most</h3>
           <ol>
             <li><strong>Guided Trip Mode.</strong> <span class="tag shipped">Shipped</span> One step per screen, with a boarding confirmation, manual advance, progress, and an “I’m not sure” button. No live bus feed yet.</li>
-            <li><strong>Read Aloud and Easy Read.</strong> <span class="tag partial">Partly shipped</span> Three text sizes, an Easy read setting, and speech on the trip screens. Not yet on every screen, and settings stay on the device.</li>
+            <li><strong>Read Aloud and Easy Read.</strong> <span class="tag partial">Partly shipped</span> Three text sizes, an Easy read setting, and speech on the trip screens. Not yet on every screen. Reading settings are stored per user on the device; the privacy choice also syncs to the account.</li>
             <li><strong>Help Card.</strong> <span class="tag shipped">Shipped</span> A full-screen card the person can show to a driver, staff member, or stranger, with a call button and 999.</li>
             <li><strong>Trip Story.</strong> <span class="tag shipped">Shipped</span> A visual preview of the whole trip, with caregiver photos when they have added them, and a practice start.</li>
             <li><strong>Calm change alerts.</strong> <span class="tag partial">Partly shipped</span> “The bus did not stop” and “I missed my stop” are in the trip. Live delay, route change, and off-route alerts are not.</li>
@@ -918,12 +918,15 @@
         <div class="card">
           <h3>What shipped in this build</h3>
           <ul>
-            <li><strong>Guided Trip Mode.</strong> Story, readiness checks, wait, boarding confirmation, card tap, ride, alight, and arrival. Each step has one primary action and a visible “I’m not sure”.</li>
-            <li><strong>Help Card.</strong> Name, destination, current location sentence, caregiver number, call, full-screen “show this to someone”, and a separate 999 link.</li>
-            <li><strong>Privacy choices.</strong> Trip only, always, and paused. The header shows the current state. Pause stops the foreground watch; the native background task cleanup is still open. Active trips sync to Firebase.</li>
-            <li><strong>Journeys.</strong> A caregiver can add a destination, bus number, and up to eight steps, with photos from the camera or library.</li>
-            <li><strong>Caregiver view.</strong> People cards show stage, last update, sharing state, call, location, and journey setup. A boarding check appears after 45 seconds at the stop.</li>
-            <li><strong>Reading support.</strong> Three text sizes, an Easy read setting, and read aloud on the trip screens. New controls have labels and larger targets.</li>
+            <li><strong>Two safe routes.</strong> Saved places and “Another place” open the real Google transit directions. Only caregiver journeys open Guided Trip Mode. The app no longer invents a bus number or stop count.</li>
+            <li><strong>Guided Trip Mode.</strong> Story, readiness checks, wait, boarding confirmation, card tap, ride, alight, and arrival. Every journey step, including custom ones, gets a screen. Each step has one primary action and a visible “I’m not sure”.</li>
+            <li><strong>Help Card.</strong> Name, destination, current location sentence, caregiver number, call, full-screen “show this to someone”, and a separate 999 link. The number always comes from the saved profile.</li>
+            <li><strong>Privacy choices.</strong> Trip only, always, and paused. The header shows the current state. Pause stops location and clears the shared trip record. Settings are stored per user; the privacy choice also syncs to the traveller’s profile.</li>
+            <li><strong>Journeys.</strong> A caregiver can add a destination, bus number, and up to eight steps, with photos from the camera or library. Custom steps and edited walk, sit, and arrive steps are used in the live flow. Saves are transactional so two caregivers do not overwrite each other.</li>
+            <li><strong>Caregiver view.</strong> One card per person, with stage, actual sharing state, last location, call, and journey setup. Each boarding check calls the person it belongs to. If a traveller stops sharing, the last known location remains visible.</li>
+            <li><strong>Reading support.</strong> Three text sizes, an Easy read setting, and read aloud on the trip screens. Preferences persist on native and are stored per user. New controls have labels and larger targets.</li>
+            <li><strong>Home basics.</strong> Saved-place photos, “Another place”, pull to refresh, a manual always-share toggle, and a caregiver call button are back.</li>
+            <li><strong>Notifications.</strong> Native dev builds and production web register for push. Web uses a Firebase service worker.</li>
             <li><strong>One codebase.</strong> The same screens run on iOS, Android, and web.</li>
           </ul>
         </div>
@@ -934,9 +937,9 @@
             <li><strong>Automatic step advance.</strong> There are no geofences. The person or caregiver advances every step.</li>
             <li><strong>Offline mode and SMS.</strong> The help card only works while the app is open. There is no offline cache, SMS fallback, second contact, or keep-awake.</li>
             <li><strong>Voice notes.</strong> Caregivers can add photos, but not record audio for a step.</li>
-            <li><strong>Caregiver alerts.</strong> No push alerts, ETA, off-route, no-movement, or arrival notification. The location page is a map without stage or ETA.</li>
-            <li><strong>Clean location stop.</strong> The destination is not wired into the sharing context, the native background task is not stopped on every cleanup path, and the notification still says “xxx”.</li>
+            <li><strong>Caregiver alerts.</strong> No push alerts for arrival, ETA, off-route, or no-movement. The location page shows a last known point but no stage or ETA.</li>
             <li><strong>Reduced motion and a full screen-reader pass.</strong> The new flows have labels, but the old directions, transit, login, and onboarding screens still need an accessibility audit.</li>
+            <li><strong>Live field evidence.</strong> The build has not been tested with PWID on a real route, with VoiceOver or TalkBack, or in airplane mode.</li>
           </ul>
         </div>
       </div>
@@ -945,21 +948,22 @@
         <caption class="sr-only">Implemented app audit by area</caption>
         <thead><tr><th>Area</th><th>In the app now</th><th>Still missing or limited</th><th>Status</th></tr></thead>
         <tbody>
-          <tr><td>Home</td><td>“Hello, [name]. Where do you want to go?”, saved place cards, journey destinations, an active trip card, and “I need help”. Sharing state sits in the header.</td><td>No “Other place” map, recent trips, or “Ask someone to help me choose”. Sign out moved to Privacy.</td><td><span class="tag shipped">Shipped</span></td></tr>
-          <tr><td>Trip story</td><td>Eight-step timeline, caregiver photos when present, readiness checks for fare card, battery, and headphones, start, practice, and caregiver call.</td><td>No per-step voice notes, quiz, caregiver sign-off, or photo date. Practice runs the same steps without sharing, not a separate lesson.</td><td><span class="tag shipped">Shipped</span></td></tr>
-          <tr><td>Guided trip</td><td>Wait, board, tap, ride, alight, and arrive. Manual primary action, driver script, “The bus did not stop”, “I missed my stop”, and help on every step.</td><td>No GPS advance, live bus arrival, or in-trip 45-second prompt. The caregiver sees the boarding check; the traveller does not get a timer.</td><td><span class="tag shipped">Shipped</span></td></tr>
+          <tr><td>Home</td><td>“Hello, [name]. Where do you want to go?”, saved place cards with photos, caregiver journey cards labelled Guided, an active trip card, “Another place”, a call button, a share toggle, pull to refresh, and “I need help”. Sharing state sits in the header.</td><td>No recent trips or “Ask someone to help me choose”. Sign out moved to Privacy.</td><td><span class="tag shipped">Shipped</span></td></tr>
+          <tr><td>Routing</td><td>Saved places and “Another place” open the real Google transit directions. Guided Trip Mode opens only from a caregiver journey with a stable journey id.</td><td>No live bus feed or route change alerts. Google availability and location permission still affect directions.</td><td><span class="tag shipped">Shipped</span></td></tr>
+          <tr><td>Trip story</td><td>Up to eight journey steps, caregiver photos when present, readiness checks for fare card, battery, and headphones, start, practice, and caregiver call.</td><td>No per-step voice notes, quiz, caregiver sign-off, or photo date. Practice runs the same steps without publishing a trip.</td><td><span class="tag shipped">Shipped</span></td></tr>
+          <tr><td>Guided trip</td><td>Every journey step, including custom steps, gets a screen. Dynamic copy comes from the journey; no invented bus number, stop count, or travel time. Manual primary action, driver script, “The bus did not stop”, “I missed my stop”, and help on every step.</td><td>No GPS advance, live bus arrival, or in-trip 45-second prompt. The caregiver sees the boarding check; the traveller does not get a timer.</td><td><span class="tag shipped">Shipped</span></td></tr>
           <tr><td>Help</td><td>Help card with name, destination, location sentence, caregiver number, call, full-screen show mode, and 999.</td><td>No SMS or location send, optional photo, second contact, or keep-awake. “Works while this app is open” is honest.</td><td><span class="tag shipped">Shipped</span></td></tr>
-          <tr><td>Privacy</td><td>Three modes, a plain-language preview, pause, sign out, and a visible sharing badge. The caregiver cannot change it silently.</td><td>No per-viewer list, history toggle, caregiver-view preview, or time limit beyond the chosen mode.</td><td><span class="tag shipped">Shipped</span></td></tr>
-          <tr><td>Location sharing</td><td>Background location on native, browser watch on web, live caregiver map, start and stop notifications.</td><td>Arrival auto-stop is not wired; the notification still says “xxx”; the native background task stop path is incomplete; no offline mode.</td><td><span class="tag partial">Partly shipped</span></td></tr>
-          <tr><td>Caregiver</td><td>People cards with stage, update time, sharing state, call, location or journey action, and a 45-second boarding check. Active trips sync across devices.</td><td>No ETA, push alerts, voice notes, arrival notification, off-route, or no-movement alert. The map has no stage or ETA.</td><td><span class="tag partial">Partly shipped</span></td></tr>
-          <tr><td>Journeys</td><td>Caregiver picks a person; adds destination and bus number; edits up to eight steps; adds camera or library photos; edits or deletes a journey.</td><td>No step reorder, photo date, preview, or “reviewed for this term” reminder.</td><td><span class="tag shipped">Shipped</span></td></tr>
-          <tr><td>Reading</td><td>Three text sizes, Easy read spacing, read aloud on trip screens, labels on the new controls, and 44–48 px targets.</td><td>Settings stay on the device. No reduced-motion setting. No complete VoiceOver or TalkBack pass. Fixed-height legacy screens can still clip.</td><td><span class="tag partial">Partly shipped</span></td></tr>
+          <tr><td>Privacy</td><td>Three modes, a plain-language preview, pause, sign out, and a visible sharing badge. Pausing stops location and clears the shared trip record. Settings are per user; the choice is written to the traveller’s profile so the caregiver can see it. The caregiver cannot change it from their screen.</td><td>No per-viewer list, history toggle, caregiver-view preview, or time limit beyond the chosen mode.</td><td><span class="tag shipped">Shipped</span></td></tr>
+          <tr><td>Location sharing</td><td>Background location on native, browser watch on web, live caregiver map, start and stop notifications, trip-only arrival auto-stop, destination cleanup, and a real foreground-service message.</td><td>No offline mode or location history. Permission errors stop sharing and wait for an explicit retry instead of retrying forever.</td><td><span class="tag shipped">Shipped</span></td></tr>
+          <tr><td>Caregiver</td><td>One card per person, with stage, actual live sharing, last known location, call, journey setup, and a 45-second boarding check. Each alert calls the traveller it belongs to. Active trips and locations subscribe in real time.</td><td>No ETA, push alerts, voice notes, arrival notification, off-route, or no-movement alert. The map has no stage or ETA.</td><td><span class="tag partial">Partly shipped</span></td></tr>
+          <tr><td>Journeys</td><td>Caregiver picks a person; adds destination, bus number, and up to eight steps; adds camera or library photos; edits or deletes. Custom steps and edited walk, sit, and arrive steps appear in the live flow. Saves are transactional.</td><td>No step reorder, photo date, preview, or “reviewed for this term” reminder.</td><td><span class="tag shipped">Shipped</span></td></tr>
+          <tr><td>Reading</td><td>Three text sizes, Easy read spacing, read aloud on trip screens, labels on the new controls, and 44–48 px targets. Settings persist on native and are stored per user.</td><td>No reduced-motion setting. No complete VoiceOver or TalkBack pass. Fixed-height legacy screens can still clip.</td><td><span class="tag partial">Partly shipped</span></td></tr>
           <tr><td>Language</td><td>The new trip, help, privacy, journey, and caregiver screens use short, literal sentences.</td><td>The old route, login, and onboarding copy is still mixed. The copy deck below is the target, not a finished sweep.</td><td><span class="tag partial">Partly shipped</span></td></tr>
         </tbody>
       </table>
 
       <div class="callout">
-        <p><strong>The honest summary.</strong> EasyBoard now works as a step-by-step travel coach for a practised route. It still cannot tell when a bus is coming, recover a trip on a weak connection, or give a caregiver an exception alert. Those are the next product gaps, not polish.</p>
+        <p><strong>The honest summary.</strong> EasyBoard can now route a saved place with real directions or guide a caregiver-built journey without making up bus numbers or stop counts. It still cannot tell when a bus is coming, work offline, or give a caregiver exception alerts. Those are the next product gaps, not polish.</p>
       </div>
     </div>
   </section>
@@ -981,16 +985,16 @@
         <div class="feature-main">
           <div class="feature-top"><span class="tag p0">P0</span><span class="tag shipped">Shipped</span><h3>Guided Trip Mode</h3></div>
           <p class="why">The old directions screen was a list of text steps. It assumed the person could read, remember where they were in the list, and decide when to move on. That is the exact set of skills the research says is hard.</p>
-          <p><strong>What it does.</strong> Turns a saved route into a sequence of single-purpose cards. Each active card has one instruction, a scene illustration, a read-aloud control, and one primary action. The traveller advances manually. Journey photos appear in the story, not on the active step. Boarding is its own step. The app does not use GPS or live bus data.</p>
+          <p><strong>What it does.</strong> Turns a saved route into a sequence of single-purpose cards. Each active card has one instruction, a scene illustration, a read-aloud control, and one primary action. The traveller advances manually. Journey photos appear in the story, not on the active step. Boarding is its own step. The app does not step-advance with GPS or use live bus data.</p>
           <ol>
             <li><strong>Before the trip:</strong> show the Trip Story and a short readiness check (fare card, phone battery, headphones).</li>
             <li><strong>At each step:</strong> one sentence, a scene illustration, read aloud, and one primary action.</li>
-            <li><strong>When the bus arrives:</strong> “The bus has stopped” opens the boarding card. “Get on bus 2” asks “I am on the bus”. A confirmation moves to the card tap, then the ride.</li>
+            <li><strong>When the bus arrives:</strong> “The bus has stopped” opens the boarding card. “Get on the bus” asks “I am on the bus”. A confirmation moves to the card tap, then the ride.</li>
             <li><strong>If the person is unsure:</strong> “I’m not sure” opens the Help Card. Call caregiver is always visible.</li>
             <li><strong>If a step is missed:</strong> “The bus did not stop” keeps the person waiting. “I missed my stop” says “Stay on the bus” and offers a caregiver call.</li>
             <li><strong>At arrival:</strong> “You are here” clears the trip locally and in Firebase when the person taps Done.</li>
           </ol>
-          <p class="mono" style="margin-top:12px">“Wait for bus 2. Stand near the blue sign.” · “The bus has stopped. The door is open. Check the number: 2.” · “Tap your card. Wait for the green light.” · “Ride 8 stops. I will count with you.” · “Get off at your stop. Then walk to your destination.”</p>
+          <p class="mono" style="margin-top:12px">“Wait for the bus. Stand where you can see it.” · “The bus has stopped. The door is open. Check the number your caregiver entered.” · “Tap your card. Wait for the green light.” · “Ride to your stop. Watch for your stop.” · “Get off at your stop. Then walk to your destination.”</p>
         </div>
         <div class="feature-side">
           <dl>
@@ -1006,7 +1010,7 @@
         <div class="feature-main">
           <div class="feature-top"><span class="tag p0">P0</span><span class="tag partial">Partly shipped</span><h3>Easy Read and Read Aloud</h3></div>
           <p class="why">Easy read changes how a screen reads. It needs short sentences, one idea per screen, and images that match the words. The NHS guidance asks for about 15 words per sentence and testing with the audience.<a class="cite" href="#src-6">[6]</a> The CDC guide is stricter for people with very low literacy: 10 words or fewer, one idea per screen, and literal images.<a class="cite" href="#src-18">[18]</a> The evidence is mixed, so test it with the people who will use it.<a class="cite" href="#src-21">[21]</a></p>
-          <p><strong>What it does.</strong> Adds a reading settings panel with Easy read, Normal, Large, and Larger text. The trip screens have a read-aloud control using the phone voice. Settings stay on the device, not the account.</p>
+          <p><strong>What it does.</strong> Adds a reading settings panel with Easy read, Normal, Large, and Larger text. The trip screens have a read-aloud control using the phone voice. Reading settings are stored per user on the device. The privacy choice also syncs to the account.</p>
           <ol>
             <li><strong>Text:</strong> the new trip, help, privacy, journey, and caregiver screens use short, literal sentences.</li>
             <li><strong>Layout:</strong> Easy read adds spacing and a small type increase; the three text sizes scale the new screens.</li>
@@ -1052,7 +1056,7 @@
         <div class="feature-main">
           <div class="feature-top"><span class="tag p0">P0</span><span class="tag shipped">Shipped</span><h3>Trip Story</h3></div>
           <p class="why">A route line is an abstract drawing. A story is a sequence of places the person can recognise. The MINDS travel training example shows the power of photos, placards, and repetition.<a class="cite" href="#src-8">[8]</a></p>
-          <p><strong>What it does.</strong> Before the trip, shows a visual timeline: walk to the stop, wait for bus 2, get on bus 2, tap the card, sit near the driver, ride 8 stops, get off, arrive. It uses the caregiver’s journey steps and photos when they exist, and a default eight-step story when they do not.</p>
+          <p><strong>What it does.</strong> Before the trip, shows a visual timeline: walk to the stop, wait for the bus, get on, tap the card, sit near the driver, ride to the stop, get off, arrive. It uses the caregiver’s journey steps and photos. The editor starts new journeys with a generic eight-step template; the live trip never falls back to invented route facts.</p>
           <ol>
             <li><strong>Create:</strong> the caregiver adds up to 8 steps and a photo for any step.</li>
             <li><strong>Preview:</strong> the person sees the full timeline before starting. There is no swipe-through or per-step voice note.</li>
@@ -1078,7 +1082,7 @@
           <p><strong>What it does.</strong> Handles the changes the app can see without live data. When the bus does not stop, the wait screen offers a calm next step. When the person misses a stop, the ride screen says stay on the bus and offers a call. The caregiver sees a boarding check after 45 seconds at the stop.</p>
           <ol>
             <li><strong>Delay:</strong> Not shipped. There is no live arrival feed.</li>
-            <li><strong>Missed stop:</strong> Shipped. “Stay on the bus. We are calling your caregiver now.”</li>
+            <li><strong>Missed stop:</strong> Shipped. “Call your caregiver now. Stay on the bus until you can get off safely.”</li>
             <li><strong>Off route:</strong> Not shipped. No location rule or “Are you okay?” prompt.</li>
             <li><strong>No movement:</strong> Not shipped. No 10-minute inactivity alert.</li>
             <li><strong>Boarding check:</strong> Shipped for the caregiver, based on elapsed time at the waiting stage.</li>
@@ -1098,7 +1102,7 @@
         <div class="feature-main">
           <div class="feature-top"><span class="tag p1">P1</span><span class="tag partial">Partly shipped</span><h3>Caregiver Co-pilot</h3></div>
           <p class="why">A live dot does not tell a caregiver what is happening. Caregivers need to know “is he on the bus?”, “is he stuck?”, “when will he arrive?”. Watching a dot all day does not scale to a classroom or a family with two jobs.<a class="cite" href="#src-1">[1]</a></p>
-          <p><strong>What it does.</strong> Replaces the dashboard with people cards. Each card shows the current stage, last update, sharing state, and one action. Call is always available. Location or journey setup sits next to it. The map is one tap away.</p>
+          <p><strong>What it does.</strong> Replaces the dashboard with one card per person. Each card shows the current stage, last update, and actual sharing state. Call is always available. Location or journey setup sits next to it. The map is one tap away.</p>
           <ol>
             <li><strong>Person card:</strong> “Ryan · Waiting at the stop · updated 9:12” and a three-step progress bar.</li>
             <li><strong>Alerts:</strong> a boarding check after 45 seconds at the stop. No push alerts, arrival notification, off-route, or no-movement alert yet.</li>
@@ -1168,7 +1172,7 @@
           <ol>
             <li><strong>This trip only:</strong> share while a trip is active. This is the default.</li>
             <li><strong>Always:</strong> share until the person turns it off. The header shows the state.</li>
-            <li><strong>Paused:</strong> the app stops sharing and the header shows Paused. The native background task stop path is still open.</li>
+            <li><strong>Paused:</strong> the app stops sharing, clears the shared trip, and the header shows Paused. The native background task is stopped on the OFF path.</li>
             <li><strong>Preview and sign out:</strong> the person sees the current state and can sign out of this phone.</li>
           </ol>
         </div>
@@ -1240,6 +1244,7 @@
                     <span aria-hidden="true">›</span>
                   </button>
 
+                  <button class="pbtn secondary" type="button" data-demo-toast="Choose a place, then see real bus or train directions.">Another place</button>
                   <button class="pbtn help" type="button" data-goto="help">I need help</button>
                   <p style="margin-top:10px;font-size:10px">Sharing changes are in the header.</p>
                 </section>
@@ -1431,9 +1436,9 @@
         <div class="mock-notes">
           <h3 style="margin-top:0">Why each screen looks like this</h3>
 
-          <div class="note"><div class="note-num">1</div><div><b>Home: saved places and one help button.</b><span>Shipped. The home shows saved place cards and journey destinations, an active trip card when one exists, and “I need help”. Sharing state is in the header. The shipped app does not have “Other place”, recent trips, or bottom navigation.</span></div></div>
+          <div class="note"><div class="note-num">1</div><div><b>Home: saved places and one help button.</b><span>Shipped. The home shows saved place cards with photos, journey destinations, an active trip card when one exists, “Another place”, “Call caregiver”, “I need help”, and a share toggle. Sharing state is in the header. The shipped app has no recent trips or bottom navigation.</span></div></div>
           <div class="note"><div class="note-num">2</div><div><b>Trip story: the route as a sequence of places.</b><span>Shipped. The timeline uses the caregiver’s journey steps and photos when they exist, otherwise a default eight-step story. The person can start or practise. Per-step voice notes and a quiz are not in this build.</span></div></div>
-          <div class="note"><div class="note-num">3</div><div><b>Wait: one instruction, one action.</b><span>Shipped. “Wait for bus 2” is the whole screen. The read-aloud control reads it. The shipped active step uses a scene illustration; the mockup shows a photo. “The bus has stopped” opens the boarding screen. “I’m not sure” opens the Help Card. There is no caregiver voice button.</span></div></div>
+          <div class="note"><div class="note-num">3</div><div><b>Wait: one instruction, one action.</b><span>Shipped. The wait step uses the bus number the caregiver entered, or “the bus” when it is blank. The read-aloud control reads it. The shipped active step uses a scene illustration; the mockup shows a photo. “The bus has stopped” opens the boarding screen. “I’m not sure” opens the Help Card. There is no caregiver voice button.</span></div></div>
           <div class="note"><div class="note-num">4</div><div><b>Board: the step after seeing the bus.</b><span>Shipped. The screen names the action and asks for confirmation. “I am on the bus” moves to the card tap. “Is this my bus?” opens a driver script. The caregiver boarding check is a 45-second timer at the waiting stage; the app does not know a bus arrived.</span></div></div>
           <div class="note"><div class="note-num">5</div><div><b>Help card: usable by a stranger.</b><span>Shipped. The card leads with the person, then the destination, then the caregiver’s number. “Show this to someone” makes the text huge. It works only while the app is open. Emergency 999 is separate. SMS and “send location” are not in this build.</span></div></div>
           <div class="note"><div class="note-num">6</div><div><b>Caregiver: a people card, not just a dot.</b><span>Shipped core. The caregiver sees stage, last update, sharing state, call, and location or journey setup. The boarding check appears after 45 seconds at the stop. There is no ETA, push alert, or voice note.</span></div></div>
@@ -1465,8 +1470,8 @@
             <button class="flow-node" type="button" data-detail-title="1. Choose a place" data-detail="The person picks a saved place or journey destination. There is no map picker and no “Ask someone to help me choose” in this build. A caregiver adds places during onboarding or journey setup."><b>Choose a place</b><span>Saved place, not an address</span></button>
             <button class="flow-node" type="button" data-detail-title="2. See the story" data-detail="The app shows up to eight steps. Caregiver photos appear when they exist; otherwise the step uses a scene illustration. The person can read or hear the step and start or practise. There is no per-step voice note."><b>See the story</b><span>Up to 8 steps</span></button>
             <button class="flow-node" type="button" data-detail-title="3. Ready check" data-detail="Three checks: fare card, phone battery, and headphones or sound on. They are reminders, not gates. The person can start even if a box is empty; the app does not fix the problem for them."><b>Ready check</b><span>Checks do not block</span></button>
-            <button class="flow-node" type="button" data-detail-title="4. Board the bus" data-detail="Manual. “The bus has stopped” opens “Get on bus 2”. “I am on the bus” moves to the card tap. The caregiver sees a boarding check after 45 seconds at the waiting stage. The app has no live bus or geofence signal."><b>Board the bus</b><span>Manual confirmation</span></button>
-            <button class="flow-node" type="button" data-detail-title="5. Ride and get off" data-detail="The ride card says “Sit near the driver” and “Ride 8 stops”. The person advances when they see the stop. “I missed my stop” says stay on the bus and offers a caregiver call. The app does not count stops automatically."><b>Ride and get off</b><span>Manual, with recovery</span></button>
+            <button class="flow-node" type="button" data-detail-title="4. Board the bus" data-detail="Manual. “The bus has stopped” opens the boarding card with the bus number the caregiver entered, or “the bus” when it is blank. “I am on the bus” moves to the card tap. The caregiver sees a boarding check after 45 seconds at the waiting stage. The app has no live bus or geofence signal."><b>Board the bus</b><span>Manual confirmation</span></button>
+            <button class="flow-node" type="button" data-detail-title="5. Ride and get off" data-detail="The ride card uses the caregiver’s ride step. The person advances when they see the stop. “I missed my stop” says stay on the bus and offers a caregiver call. The app does not count stops automatically."><b>Ride and get off</b><span>Manual, with recovery</span></button>
             <button class="flow-node" type="button" data-detail-title="6. Handle a change" data-detail="Only two change paths are live: the bus did not stop, and the person missed the stop. There is no live delay, route change, off-route, or no-movement alert. The caregiver boarding check is a timer, not a bus signal."><b>Handle a change</b><span>Missed bus and stop</span></button>
             <button class="flow-node" type="button" data-detail-title="7. Arrive" data-detail="The app shows “You are here.” Sharing stops at the arrived stage. Tapping Done clears the local trip and the Firebase active trip. The caregiver sees the arrived stage through the trip card. There is no push notification and no trip rating."><b>Arrive</b><span>Stop sharing, clear trip</span></button>
           </div>
@@ -1493,10 +1498,10 @@
         <div class="flow-panel" data-flow-panel="consent" hidden>
           <div class="flow-row" role="group" aria-label="Consent flow steps">
             <button class="flow-node" type="button" data-detail-title="1. Who helps you?" data-detail="Onboarding collects the caregiver’s phone number and saved places. It does not offer role choices such as “call only” or “see trips”. The linked caregiver appears on their own home."><b>Who helps you?</b><span>Caregiver phone</span></button>
-            <button class="flow-node" type="button" data-detail-title="2. Choose a preset" data-detail="The Privacy screen offers three presets: this trip only, always, and paused. Trip only is the default. The choice is saved on the device, while the active trip syncs through Firebase."><b>Choose a preset</b><span>Trip only by default</span></button>
+            <button class="flow-node" type="button" data-detail-title="2. Choose a preset" data-detail="The Privacy screen offers three presets: this trip only, always, and paused. Trip only is the default. The choice is stored per user and written to the traveller’s profile; the active trip syncs through Firebase."><b>Choose a preset</b><span>Trip only by default</span></button>
             <button class="flow-node" type="button" data-detail-title="3. See what is shared" data-detail="The preview shows the current state and, during a trip, the destination and stage. It does not show a full mock of the caregiver’s screen. The header badge opens the same privacy screen."><b>See what is shared</b><span>State and stage preview</span></button>
             <button class="flow-node" type="button" data-detail-title="4. Start a trip" data-detail="Starting a trip clears practice mode and turns on sharing unless the mode is paused. The header shows “Sharing this trip” or “Sharing off”. The person can open privacy and pause at any time."><b>Start a trip</b><span>Header sharing state</span></button>
-            <button class="flow-node" type="button" data-detail-title="5. Arrive and stop" data-detail="Sharing stops when the trip reaches the arrived stage. The caregiver’s active trip card shows the arrived stage. The app does not keep a trip history. Auto-stop by destination distance is not wired."><b>Arrive and stop</b><span>Sharing ends</span></button>
+            <button class="flow-node" type="button" data-detail-title="5. Arrive and stop" data-detail="Sharing stops at the arrived stage in trip-only mode. The caregiver’s active trip card shows the arrived stage. Destination distance can also stop trip-only sharing at 20 metres; Always continues until the person turns it off. The app does not keep a trip history."><b>Arrive and stop</b><span>Sharing ends</span></button>
             <button class="flow-node" type="button" data-detail-title="6. Review anytime" data-detail="The Privacy screen is one tap from the header. It shows the current state and a sign-out section. The caregiver cannot change the setting. There is no history control or caregiver request flow."><b>Review anytime</b><span>Pause or sign out</span></button>
           </div>
           <div class="flow-detail" aria-live="polite">
@@ -1522,7 +1527,7 @@
 
       <h3>What is in the shipped build</h3>
       <div class="callout green">
-        <p><strong>One added package: <span class="mono">expo-speech</span>.</strong> The rest uses the existing Expo and Firebase stack. Read aloud goes through <span class="mono">useReadAloud</span>. Photos use <span class="mono">expo-image-picker</span> and Firebase Storage. Trip state is a local <span class="mono">tripStore</span> plus the Firebase <span class="mono">activeTrip</span>. There is no XState, React Query, Workbox, geofence package, or offline cache in this build.</p>
+        <p><strong>Two added packages: <span class="mono">expo-speech</span> and <span class="mono">@react-native-async-storage/async-storage</span>.</strong> The rest uses the existing Expo and Firebase stack. Read aloud goes through <span class="mono">useReadAloud</span>. Photos use <span class="mono">expo-image-picker</span> and Firebase Storage. Trip state and reading settings persist through AsyncStorage on native and localStorage on web. There is no XState, React Query, Workbox, geofence package, or offline help cache in this build.</p>
       </div>
 
       <div class="callout green">
@@ -1535,13 +1540,13 @@
         <tbody>
           <tr><td>Read aloud</td><td><span class="mono">expo-speech</span> via <span class="mono">useReadAloud</span>; English (<span class="mono">en-SG</span>) on the trip story and active step.</td><td>Every screen, account language, caregiver name recording, and a speaking-rate control.</td></tr>
           <tr><td>Photos</td><td><span class="mono">expo-image-picker</span> camera and library, Firebase Storage, and <span class="mono">expo-image</span> display.</td><td>Photo date, termly review, and an image on/off choice.</td></tr>
-          <tr><td>Trip state</td><td>Local <span class="mono">tripStore.ts</span> plus Firebase <span class="mono">activeTrip</span>; manual stage transitions.</td><td>Offline cache and stronger transition guards if the state machine grows.</td></tr>
+          <tr><td>Trip state</td><td>Local <span class="mono">tripStore.ts</span> with AsyncStorage/localStorage plus Firebase <span class="mono">activeTrip</span>; manual step transitions and resume.</td><td>Offline cache and stronger transition guards if the state machine grows.</td></tr>
           <tr><td>Shared trip state</td><td>Firebase Realtime Database <span class="mono">users/{phone}/activeTrip</span>; caregiver subscriptions.</td><td>Push alerts, ETA, event history, and a resolved-alert state.</td></tr>
-          <tr><td>Location sharing</td><td>Native background location with <span class="mono">expo-location</span> and <span class="mono">expo-task-manager</span>; web <span class="mono">navigator.geolocation</span>; three privacy modes.</td><td>Destination auto-stop, reliable task cleanup, and offline behavior.</td></tr>
+          <tr><td>Location sharing</td><td>Native background location with <span class="mono">expo-location</span> and <span class="mono">expo-task-manager</span>; web <span class="mono">navigator.geolocation</span>; three privacy modes; trip-only arrival auto-stop; explicit error/retry state.</td><td>Offline behavior and a full device matrix.</td></tr>
           <tr><td>Help card</td><td>Local profile and route params; <span class="mono">Linking</span> <span class="mono">tel:</span>; full-screen mode; separate 999 link.</td><td>SMS, second contact, offline cache, and keep-awake.</td></tr>
           <tr><td>Step triggers</td><td>None. Every step is manual.</td><td>Optional geofence with a manual “I’m here” fallback. Never geofence-only.</td></tr>
           <tr><td>Live bus data</td><td>None. Manual “The bus has stopped” and a 45-second caregiver boarding check.</td><td>LTA DataMall or another live feed through a Cloud Function.</td></tr>
-          <tr><td>Offline</td><td>None. The help card says “Works while this app is open.”</td><td>AsyncStorage or secure store, a service worker for web, and an airplane-mode test.</td></tr>
+          <tr><td>Offline</td><td>No offline help or route data. The help card says “Works while this app is open.” Local trip and reading settings do persist.</td><td>Offline help/route cache, a web service worker for the app shell, and an airplane-mode test.</td></tr>
           <tr><td>Reduced motion</td><td>None.</td><td><span class="mono">useReducedMotion</span> or the platform setting.</td></tr>
         </tbody>
       </table>
@@ -1553,19 +1558,19 @@
         <tbody>
           <tr><td>Trip state guards</td><td><span class="mono">xstate</span> + <span class="mono">@xstate/react</span></td><td>The shipped trip is small enough for a local store. Add a state machine if transitions grow.</td></tr>
           <tr><td>Live data and caching</td><td><span class="mono">@tanstack/react-query</span> + <span class="mono">zod</span></td><td>No external transport API is wired yet.</td></tr>
-          <tr><td>Offline cache</td><td><span class="mono">@react-native-async-storage/async-storage</span> and <span class="mono">workbox-build</span></td><td>Offline behavior is still a known gap, not a shipped feature.</td></tr>
+          <tr><td>Offline cache</td><td><span class="mono">workbox-build</span></td><td>AsyncStorage is used for local trip and settings, but offline help/routes are still a gap.</td></tr>
           <tr><td>Language</td><td><span class="mono">expo-localization</span> + <span class="mono">i18next</span></td><td>English only in this release.</td></tr>
           <tr><td>Accessibility checks</td><td><span class="mono">oxlint</span> plus manual VoiceOver and TalkBack tests</td><td>Existing linter remains. No second linter was added.</td></tr>
           <tr><td>Transport icons</td><td><span class="mono">@expo/vector-icons</span></td><td>Already installed and used; text always pairs with the icon.</td></tr>
         </tbody>
       </table>
 
-      <div class="callout red">
-        <p><strong>Fix these before adding live data.</strong> These trust bugs are still open. Active-trip sync is fixed; the location stop path is not.</p>
+      <div class="callout green">
+        <p><strong>Trust bugs fixed in this pass.</strong></p>
         <ol>
-          <li><strong>Stop the background location task on every OFF path.</strong> In <span class="mono">LocationSharingContext.native.tsx</span>, cleanup removes the location subscription but does not stop the registered background task. The callback can keep writing <span class="mono">isSharing: true</span>. Await the stop call and check the server flag is false.</li>
-          <li><strong>Wire the real destination into location sharing.</strong> The route pages set the navigation destination, not the location-sharing destination, so the 20-metre arrival stop may never fire. Pass the trip destination into the sharing context.</li>
-          <li><strong>Replace the “xxx” notification text.</strong> Use “Sharing your location with Mei Leng for this trip.” A placeholder in a safety notification destroys trust.</li>
+          <li><strong>Location failures stop cleanly.</strong> A permission denial or timeout no longer re-enables sharing. The UI shows the error and a “Try location again” action. The native background task is stopped on the OFF path and uses a real foreground-service message.</li>
+          <li><strong>Arrival auto-stop is wired.</strong> The trip passes destination coordinates into the sharing context. In trip-only mode, saved-place and journey destinations can stop at 20 metres. The trip itself also stops sharing at the arrived step. Always keeps sharing until the person turns it off.</li>
+          <li><strong>Unfinished trips expire.</strong> Back-to-story ends the trip and clears local and Firebase state. A waiting trip expires after six hours; an arrived trip after 30 minutes.</li>
         </ol>
       </div>
 
@@ -1593,11 +1598,11 @@
         <thead><tr><th>Where</th><th>In the app</th><th>Still next</th><th>Why</th></tr></thead>
         <tbody>
           <tr><td>Home</td><td class="new">“Hello, [name]. Where do you want to go?”</td><td class="old">“Where are you going?” is shorter, but “want” is not wrong.</td><td>“Want” can sound like a wish, not a trip. This is a low-risk change.</td></tr>
-          <tr><td>Home</td><td class="new">Saved place cards and journey destinations.</td><td class="old">No “Other place” map in this build.</td><td>The person picks a place, not an address.</td></tr>
+          <tr><td>Home</td><td class="new">Saved place cards, journey cards, and “Another place”.</td><td class="old">No map picker on the home screen.</td><td>Saved places and another place use real directions; journey cards use the caregiver’s guided steps.</td></tr>
           <tr><td>Home</td><td class="new">“I need help”</td><td class="old">No “Support” or hidden menu.</td><td>Help is a normal action.</td></tr>
           <tr><td>Trip start</td><td class="new">“Start trip” and “Practice this trip”</td><td class="old">“START NAVIGATION” remains only on the legacy directions screen.</td><td>Sentence case; “navigation” is a system word.</td></tr>
-          <tr><td>Boarding</td><td class="new">“The bus has stopped”, “Get on bus 2”, “I am on the bus”</td><td class="old">No “I see the bus” as the action.</td><td>Name the step, then ask for confirmation.</td></tr>
-          <tr><td>Missed bus</td><td class="new">“The bus did not stop”</td><td class="old">The app says the next bus will come in 8 minutes. That is not live data.</td><td>Offer a next action without a false arrival claim.</td></tr>
+          <tr><td>Boarding</td><td class="new">“The bus has stopped”, “Get on the bus”, “I am on the bus”</td><td class="old">No “I see the bus” as the action.</td><td>Name the step, then ask for confirmation.</td></tr>
+          <tr><td>Missed bus</td><td class="new">“The bus did not stop”</td><td class="old">The old mockup said the next bus would come in 8 minutes. The app has no live arrival data.</td><td>Offer a next action without a false arrival claim.</td></tr>
           <tr><td>Arrival</td><td class="new">“You are here.”</td><td class="old">The legacy screen still uses “🎉 ARRIVED”.</td><td>Confetti is a surprise; “You are here” is information.</td></tr>
           <tr><td>Help</td><td class="new">“Please call my caregiver.” and “Show this to someone”</td><td class="old">No SMS or “Send my location”.</td><td>The card does the explaining, not the person.</td></tr>
           <tr><td>Privacy</td><td class="new">“This trip only”, “Always”, “Paused”</td><td class="old">No history or allow-calls controls.</td><td>Three choices the person can see and change.</td></tr>
@@ -1607,7 +1612,7 @@
       </table>
 
       <h3 style="margin-top:34px">Notification copy (target)</h3>
-      <p style="color:var(--muted);font-size:.9rem">Push notifications are not wired in this build. The caregiver sees the boarding check inside the app. Use this copy when alerts ship.</p>
+      <p style="color:var(--muted);font-size:.9rem">Share and stop push notifications are wired for native dev builds and production web. Arrival, off-route, and no-movement push alerts are not. Use this copy when those alerts ship.</p>
       <div class="grid-2">
         <div class="card">
           <h4>To the caregiver</h4>
@@ -1625,7 +1630,7 @@
           <ul>
             <li><strong>Delay:</strong> “The bus is 6 minutes late. Wait here.”</li>
             <li><strong>Boarding:</strong> “The bus has stopped. The door is open. Get on bus 2.”</li>
-            <li><strong>Missed bus:</strong> “The bus did not stop. Wait for the next bus 2. It will come in 8 minutes.”</li>
+            <li><strong>Missed bus:</strong> “The bus did not stop. Wait for the next bus. Ask the driver if you are unsure.”</li>
             <li><strong>Off route:</strong> “You are near the MRT station. Are you okay?”</li>
             <li><strong>Caregiver call:</strong> “Mei Leng is calling. You can answer or send a message.”</li>
             <li><strong>Arrival:</strong> “You are here. Mei Leng knows.”</li>
@@ -1657,11 +1662,11 @@
         <caption class="sr-only">Shipped data model and the remaining proposals</caption>
         <thead><tr><th>Entity</th><th>Fields in the build</th><th>Status and why</th></tr></thead>
         <tbody>
-          <tr><td>ActiveTrip</td><td><span class="mono">id, travellerName, travellerPhone, destination, origin, stage, busNumber, startedAt, updatedAt, caregiverName, caregiverPhone, practice</span></td><td>Shipped. Local storage plus Firebase. The caregiver subscribes to the latest trip. No boarding timestamp or alert record.</td></tr>
-          <tr><td>Journey</td><td><span class="mono">id, destinationName, originName, busNumber, steps[], updatedAt</span></td><td>Shipped. The caregiver owns the journey; it is read into the trip story.</td></tr>
+          <tr><td>ActiveTrip</td><td><span class="mono">id, travellerName, travellerPhone, journeyId, destination, origin, stage, stepId, busNumber, startedAt, updatedAt, caregiverName, caregiverPhone, practice, privacyMode, destinationLatLng</span></td><td>Shipped. AsyncStorage/localStorage plus Firebase. The caregiver subscribes per person and ignores expired trips. No boarding timestamp or alert record.</td></tr>
+          <tr><td>Journey</td><td><span class="mono">id, destinationName, originName, busNumber, destinationLatLng, steps[], updatedAt</span></td><td>Shipped. The caregiver owns the journey; it is read by stable id into the trip story and live flow.</td></tr>
           <tr><td>JourneyStep</td><td><span class="mono">id, title, detail, photoUrl</span></td><td>Shipped. Up to eight steps. No geofence, voice note, or trigger yet.</td></tr>
           <tr><td>PWID profile</td><td><span class="mono">caregiverPhone, savedPlaces, journeys, activeTrip, location</span></td><td>Shipped. Active trip and location are shared; saved places and journeys are caregiver setup.</td></tr>
-          <tr><td>Preferences</td><td><span class="mono">easyRead, textScale, privacyMode</span></td><td>Shipped on the device. Not synced to the account.</td></tr>
+          <tr><td>Preferences</td><td><span class="mono">easyRead, textScale, privacyMode</span></td><td>Shipped per user on the device. Privacy mode also syncs to the PWID profile.</td></tr>
           <tr><td>Proposed additions</td><td><span class="mono">TripStep</span> geofence/trigger, <span class="mono">SupportCard</span> offline fields, <span class="mono">ConsentSettings</span> history/viewers, <span class="mono">Alert</span> resolution</td><td>Not shipped. These are still needed for live bus data, offline help, and caregiver escalation.</td></tr>
         </tbody>
       </table>
@@ -1693,7 +1698,7 @@
       </div>
 
       <div class="callout green">
-        <p><strong>What this build has been checked for.</strong> TypeScript, 320 px and 375 px layouts, the PWID and caregiver views, cross-device active-trip sync, direct-route back navigation, journey photo upload, and a fresh browser console with no errors or warnings. It has not been tested with PWID on a real route, with VoiceOver or TalkBack, or in airplane mode. Those are the next tests, not done work.</p>
+        <p><strong>What this build has been checked for.</strong> TypeScript, 320 px and 375 px layouts, the PWID and caregiver views, the real-directions route, saving a journey with no photos, custom steps in the live flow, trip resume after reload, paused sharing clearing the caregiver view, ending a trip, logout clearing local data, and one location timeout producing one error rather than a retry loop. It has not been tested with PWID on a real route, with VoiceOver or TalkBack, in airplane mode, or through production web push. Those are the next tests, not done work.</p>
       </div>
 
       <div class="grid-2">
@@ -1765,7 +1770,7 @@
           <div class="when">NEXT</div>
           <h3>Trust and reach</h3>
           <ul>
-            <li>Location stop path, destination auto-stop, and “xxx” copy.</li>
+            <li>Production web push test and notification permission recovery.</li>
             <li>Offline help card and SMS fallback.</li>
             <li>VoiceOver, TalkBack, 200% text, and reduced motion.</li>
             <li>Photo dates, practice quiz, and caregiver sign-off.</li>

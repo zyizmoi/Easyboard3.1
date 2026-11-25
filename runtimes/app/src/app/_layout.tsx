@@ -13,6 +13,7 @@ import {
 } from '@/contexts'
 import { Provider } from '@/provider'
 import notificationService, { setNavigationCallback } from '@/services'
+import { initTripStore } from '@/services/tripStore'
 
 function RootLayoutNav() {
   const { hasAuthen, userType } = useAuth()
@@ -43,7 +44,9 @@ function RootLayoutNav() {
     }
 
     // Only initialize when user is authenticated
-    if (hasAuthen && Platform.OS !== 'web' && !__DEV__) {
+    // Web push needs a production service worker. Native dev builds can
+    // register directly. Localhost web often has no push service.
+    if (hasAuthen && (Platform.OS !== 'web' || !__DEV__)) {
       initializeNotifications()
     }
   }, [hasAuthen, userType]) // Re-initialize when user changes
@@ -70,6 +73,10 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
+  useEffect(() => {
+    void initTripStore()
+  }, [])
+
   return (
     <Provider>
       <PreferencesProvider>

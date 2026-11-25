@@ -14,4 +14,7 @@ declare module 'expo-task-manager' {
       error: TaskManagerError | null
     }) => void | Promise<void>
   ): void
+
+  export function isTaskDefined(taskName: string): boolean
+  export function isTaskRegisteredAsync(taskName: string): Promise<boolean>
 }

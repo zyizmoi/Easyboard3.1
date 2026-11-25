@@ -1,4 +1,4 @@
-import type { PWIDUser, UserData, UserLocation, UserType } from '../types'
+import type { Journey, PWIDUser, UserData, UserLocation, UserType } from '../types'
 
 export interface IUserService {
   createUser(
@@ -19,6 +19,8 @@ export interface IUserService {
   ): () => void
   getPWIDsByCaregiverPhone(caregiverPhone: string): Promise<PWIDUser[]>
   updateUserData(phoneNumber: string, updates: Partial<UserData>): Promise<void>
+  savePWIDJourney(phoneNumber: string, journey: Journey): Promise<Journey[]>
+  deletePWIDJourney(phoneNumber: string, journeyId: string): Promise<Journey[]>
   setPWIDActiveTrip(phoneNumber: string, trip: import('./tripStore').ActiveTrip | null): Promise<void>
   subscribeToActiveTrip(
     phoneNumber: string,

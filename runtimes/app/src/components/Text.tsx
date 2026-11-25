@@ -1,4 +1,4 @@
-import { Text as RNText, type TextProps as RNTextProps } from 'react-native'
+import { Platform, Text as RNText, type TextProps as RNTextProps } from 'react-native'
 import { font } from '../theme/tokens'
 
 export interface TextProps extends RNTextProps {
@@ -12,7 +12,7 @@ export const Text = ({ className, ...props }: TextProps) => {
     <MappedText
       {...props}
       className={className}
-      style={[{ fontFamily: font.sans }, props.style]}
+      style={[{ fontFamily: Platform.OS === 'web' ? font.sans : undefined }, props.style]}
     />
   )
 }

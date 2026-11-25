@@ -2,6 +2,8 @@
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage'
 import type { UserStorage } from '../types'
 import { signOut } from './authService.web'
+import { clearLocalSessionData } from './localSession'
+import { notifySessionChanged } from './sessionEvents'
 import { getStorageInstance } from './firebase.web'
 import type { IStorageService } from './storageService'
 
@@ -60,6 +62,7 @@ export const storageService: IStorageService = {
     try {
       const storage = getStorage()
       storage.setItem(USER_STORAGE_KEY, JSON.stringify(userStorage))
+      notifySessionChanged()
     } catch (error) {
       console.error('Error saving user data:', error)
       throw error
@@ -82,6 +85,7 @@ export const storageService: IStorageService = {
 
   clearUserStorage: async () => {
     try {
+      await clearLocalSessionData()
       const storage = getStorage()
       const keysToDelete = [
         USER_STORAGE_KEY,
@@ -102,6 +106,7 @@ export const storageService: IStorageService = {
           console.log(`Key ${key} not found or already deleted`)
         }
       })
+      notifySessionChanged()
       console.log('All user data cleared successfully')
     } catch (error) {
       console.error('Error clearing user data:', error)

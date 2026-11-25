@@ -1,118 +1,174 @@
 'use client'
 
+import { Ionicons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useWindowDimensions, View } from 'react-native'
 import { Text } from '../../components'
-import {
-  ActionButton,
-  AppFrame,
-  PlaceCard
-} from '../../components/ui'
+import { ActionButton, AppFrame, PlaceCard, Toast, Toggle } from '../../components/ui'
 import { usePreferences } from '../../contexts/PreferencesContext'
 import { useLocationSharing } from '../../contexts/LocationSharingContext'
-import { getUserStorage, type UserStorage } from '../../services/storageService'
+import { useCallCaregiver } from '../../hooks/useCallCaregiver'
+import { useToast } from '../../hooks/useToast'
+import {
+  getPhotoDownloadUrl,
+  getUserStorage,
+  type UserStorage
+} from '../../services/storageService'
 import {
   getActiveTrip,
+  initTripStore,
   stageLabel,
   subscribeToTrip,
   type ActiveTrip
 } from '../../services/tripStore'
 import { getUserData } from '../../services/userService'
 import { colors, font, radius, shadow, space } from '../../theme/tokens'
-import type { Journey, PWIDUser } from '../../types'
+import type { Journey, PWIDUser, SavedPlace } from '../../types'
 
 interface CaregiverSummary {
   name?: string
   phone?: string
 }
 
+interface HomePlace {
+  key: string
+  locationName: string
+  address?: string
+  imageKey?: string
+  icon: keyof typeof Ionicons.glyphMap
+  journeyId?: string
+  latlng?: { latitude: number; longitude: number }
+}
+
+function placeIcon(name: string): keyof typeof Ionicons.glyphMap {
+  if (name === 'Home') return 'home-outline'
+  if (name === 'School') return 'school-outline'
+  return 'briefcase-outline'
+}
+
+function savedPlaceToHome(place: SavedPlace): HomePlace {
+  return {
+    key: `saved-${place.locationName}-${place.address?.description || ''}`,
+    locationName: place.locationName,
+    address: place.address?.description,
+    imageKey: place.locationImageKey,
+    icon: placeIcon(place.locationName),
+    latlng: place.address?.latlng
+      ? {
+          latitude: place.address.latlng.latitude,
+          longitude: place.address.latlng.longitude
+        }
+      : undefined
+  }
+}
+
 export function PWIDHome() {
   const router = useRouter()
   const { width } = useWindowDimensions()
-  const { scale, bodyLine } = usePreferences()
+  const { scale, bodyLine, preferences, updatePreferences } = usePreferences()
   const { isLocationSharing } = useLocationSharing()
+  const { message, showToast } = useToast()
+  const callCaregiver = useCallCaregiver()
 
   const [userData, setUserData] = useState<UserStorage | null>(null)
   const [caregiver, setCaregiver] = useState<CaregiverSummary>({})
   const [journeys, setJourneys] = useState<Journey[]>([])
   const [activeTrip, setActiveTrip] = useState<ActiveTrip | null>(getActiveTrip)
+  const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
 
   const isWide = width >= 980
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const stored = await getUserStorage()
-        setUserData(stored)
-        const storedPwid = stored as unknown as PWIDUser | null
+  const load = useCallback(async () => {
+    try {
+      const stored = await getUserStorage()
+      setUserData(stored)
+      const storedPwid = stored as unknown as PWIDUser | null
+      const isPreview = Boolean((stored as { preview?: boolean } | null)?.preview)
 
-        if (storedPwid?.phoneNumber) {
-          const ownData = await getUserData(storedPwid.phoneNumber)
-          setJourneys((ownData as PWIDUser | null)?.journeys ?? [])
-        }
+      if (storedPwid?.phoneNumber && !isPreview) {
+        const ownData = await getUserData(storedPwid.phoneNumber)
+        setJourneys((ownData as PWIDUser | null)?.journeys ?? [])
+      }
 
-        if (storedPwid?.caregiverPhone) {
-          setCaregiver({ phone: storedPwid.caregiverPhone })
+      if (storedPwid?.caregiverPhone) {
+        setCaregiver({ phone: storedPwid.caregiverPhone })
+        if (!isPreview) {
           const caregiverData = await getUserData(storedPwid.caregiverPhone)
           if (caregiverData?.name) {
             setCaregiver({ name: caregiverData.name, phone: storedPwid.caregiverPhone })
           }
         }
-      } catch (error) {
-        console.error('Error loading home data:', error)
-      } finally {
-        setLoading(false)
       }
+    } catch (error) {
+      console.error('Error loading home data:', error)
+      showToast('Could not refresh your places.')
     }
+  }, [showToast])
 
-    load()
-  }, [])
+  useEffect(() => {
+    initTripStore().catch(error => console.error('Error loading saved trip:', error))
+    load().finally(() => setLoading(false))
+  }, [load])
 
   useEffect(() => subscribeToTrip(setActiveTrip), [])
+
+  const refresh = useCallback(async () => {
+    setRefreshing(true)
+    await load()
+    setRefreshing(false)
+  }, [load])
 
   const savedPlaces = useMemo(() => {
     if (userData?.userType !== 'PWID') return []
     const pwid = userData as unknown as PWIDUser
-    const places = (pwid.savedPlaces ?? []).map(place => ({
-      ...place,
-      icon:
-        place.locationName === 'Home'
-          ? ('home-outline' as const)
-          : place.locationName === 'School'
-            ? ('school-outline' as const)
-            : ('briefcase-outline' as const)
-    }))
-    const journeyPlaces = journeys
-      .filter(
-        journey =>
-          !places.some(
-            place =>
-              place.locationName.trim().toLowerCase() ===
-              journey.destinationName.trim().toLowerCase()
-          )
+    const places = (pwid.savedPlaces ?? []).map(savedPlaceToHome)
+    const journeyPlaces: HomePlace[] = journeys.map(journey => {
+      const matchedPlace = places.find(
+        place => place.locationName.trim().toLowerCase() === journey.destinationName.trim().toLowerCase()
       )
-      .map(journey => ({
+      return {
+        key: `journey-${journey.id}`,
         locationName: journey.destinationName,
-        address: undefined,
-        icon: 'bus-outline' as const
-      }))
+        address: matchedPlace?.address,
+        imageKey: matchedPlace?.imageKey,
+        icon: 'bus-outline',
+        journeyId: journey.id,
+        latlng: journey.destinationLatLng ?? matchedPlace?.latlng
+      }
+    })
     return [...places, ...journeyPlaces]
   }, [journeys, userData])
 
+  useEffect(() => {
+    let cancelled = false
+    const loadPhotos = async () => {
+      const entries = await Promise.all(
+        savedPlaces.map(async place => {
+          if (!place.imageKey) return null
+          try {
+            const url = await getPhotoDownloadUrl(place.imageKey)
+            return [place.key, url] as const
+          } catch {
+            return null
+          }
+        })
+      )
+      if (!cancelled) {
+        setPhotoUrls(Object.fromEntries(entries.filter(Boolean) as (readonly [string, string])[]))
+      }
+    }
+    void loadPhotos()
+    return () => {
+      cancelled = true
+    }
+  }, [savedPlaces])
+
   const storedPwid = userData as unknown as PWIDUser | null
   const firstName = storedPwid?.name?.trim().split(/\s+/)[0] || ''
-  const caregiverName = caregiver.name?.trim() || 'your caregiver'
   const caregiverPhone = caregiver.phone || storedPwid?.caregiverPhone || ''
-
-  const navigateToTrip = useCallback(
-    (destinationName: string) => {
-      const params = new URLSearchParams({ destinationName, practice: '0' })
-      router.navigate(`/trip?${params.toString()}`)
-    },
-    [router]
-  )
 
   const openHelpCard = useCallback(() => {
     const params = new URLSearchParams({
@@ -121,12 +177,65 @@ export function PWIDHome() {
         ? activeTrip.stage === 'waiting'
           ? 'the bus stop'
           : 'the way to your destination'
-        : '',
-      caregiverName,
-      caregiverPhone
+        : ''
     })
     router.navigate(`/help-card?${params.toString()}`)
-  }, [activeTrip, caregiverName, caregiverPhone, router, savedPlaces])
+  }, [activeTrip, router, savedPlaces])
+
+  const openPlace = useCallback(
+    (place: HomePlace) => {
+      if (place.journeyId) {
+        const params = new URLSearchParams({
+          journeyId: place.journeyId,
+          destinationName: place.locationName,
+          practice: '0'
+        })
+        if (place.latlng) {
+          params.set('lat', String(place.latlng.latitude))
+          params.set('lng', String(place.latlng.longitude))
+        }
+        router.navigate(`/trip?${params.toString()}`)
+        return
+      }
+      if (place.latlng) {
+        const params = new URLSearchParams({
+          lat: String(place.latlng.latitude),
+          lng: String(place.latlng.longitude),
+          name: place.locationName,
+          description: place.address || place.locationName
+        })
+        router.navigate(`/transit-options?${params.toString()}`)
+        return
+      }
+      showToast('Ask your caregiver to add directions for this place.')
+    },
+    [router, showToast]
+  )
+
+  const openActiveTrip = useCallback(() => {
+    if (!activeTrip?.journeyId) {
+      showToast('This trip needs a caregiver setup.')
+      return
+    }
+    const params = new URLSearchParams({
+      journeyId: activeTrip.journeyId,
+      destinationName: activeTrip.destination,
+      practice: '0'
+    })
+    if (activeTrip.destinationLatLng) {
+      params.set('lat', String(activeTrip.destinationLatLng.lat))
+      params.set('lng', String(activeTrip.destinationLatLng.lng))
+    }
+    router.navigate(`/trip?${params.toString()}`)
+  }, [activeTrip, router, showToast])
+
+  const call = useCallback(async () => {
+    if (!caregiverPhone) {
+      showToast('No caregiver number saved.')
+      return
+    }
+    await callCaregiver()
+  }, [callCaregiver, caregiverPhone, showToast])
 
   if (loading) {
     return (
@@ -141,14 +250,14 @@ export function PWIDHome() {
   const twoColumn = isWide && Boolean(activeTrip)
 
   return (
-    <AppFrame statusLabel={isLocationSharing ? 'Sharing this trip' : 'Sharing off'}>
-      <View
-        style={{
-          flexDirection: twoColumn ? 'row' : 'column',
-          gap: space.lg,
-          alignItems: 'stretch'
-        }}
-      >
+    <AppFrame
+      statusLabel={
+        preferences.privacyMode === 'paused' ? 'Paused' : isLocationSharing ? 'Sharing this trip' : 'Sharing off'
+      }
+      refreshing={refreshing}
+      onRefresh={refresh}
+    >
+      <View style={{ flexDirection: twoColumn ? 'row' : 'column', gap: space.lg, alignItems: 'stretch' }}>
         <View
           style={{
             flex: twoColumn ? 1.55 : undefined,
@@ -184,19 +293,19 @@ export function PWIDHome() {
             </Text>
           </View>
 
-          <View style={{ gap: 12 }}>
+          <View style={{ gap: 10 }}>
             {savedPlaces.length > 0 ? (
-              <View style={{ gap: 10 }}>
-                {savedPlaces.map(place => (
-                  <PlaceCard
-                    key={`${place.locationName}-${place.address?.description}`}
-                    title={place.locationName}
-                    address={place.address?.description}
-                    icon={place.icon}
-                    onPress={() => navigateToTrip(place.locationName)}
-                  />
-                ))}
-              </View>
+              savedPlaces.map(place => (
+                <PlaceCard
+                  key={place.key}
+                  title={place.locationName}
+                  address={place.address}
+                  imageUrl={photoUrls[place.key]}
+                  icon={place.icon}
+                  badge={place.journeyId ? 'Guided' : undefined}
+                  onPress={() => openPlace(place)}
+                />
+              ))
             ) : (
               <View
                 style={{
@@ -218,14 +327,46 @@ export function PWIDHome() {
             )}
           </View>
 
+          <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>
+            <ActionButton
+              label='Another place'
+              icon='search-outline'
+              variant='secondary'
+              onPress={() => router.navigate('/place-search')}
+            />
+            <ActionButton
+              label='Call caregiver'
+              icon='call-outline'
+              variant='secondary'
+              onPress={call}
+            />
+          </View>
+
           <ActionButton
             label='I need help'
             icon='help-circle-outline'
-            variant={savedPlaces.length > 0 ? 'secondary' : 'primary'}
+            variant='secondary'
             onPress={openHelpCard}
             fullWidth
             accessibilityHint='Opens your help card'
           />
+
+          <View
+            style={{
+              backgroundColor: colors.surface,
+              borderWidth: 1,
+              borderColor: colors.line,
+              borderRadius: radius.lg,
+              paddingHorizontal: 18
+            }}
+          >
+            <Toggle
+              checked={preferences.privacyMode === 'always'}
+              onChange={value => updatePreferences({ privacyMode: value ? 'always' : 'trip-only' })}
+              label='Always share my location'
+              description='Off means sharing only during a trip.'
+            />
+          </View>
         </View>
 
         {activeTrip ? (
@@ -249,13 +390,14 @@ export function PWIDHome() {
                   label='Open trip'
                   icon='arrow-forward'
                   variant='secondary'
-                  onPress={() => navigateToTrip(activeTrip.destination)}
+                  onPress={openActiveTrip}
                 />
               </View>
             </RailCard>
           </View>
         ) : null}
       </View>
+      <Toast message={message} />
     </AppFrame>
   )
 }

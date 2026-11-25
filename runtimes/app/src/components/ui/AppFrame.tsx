@@ -3,7 +3,7 @@
 import { Ionicons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
 import { useState } from 'react'
-import { Pressable, ScrollView, useWindowDimensions, View } from 'react-native'
+import { Pressable, RefreshControl, ScrollView, useWindowDimensions, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Text } from '../Text'
 import { usePreferences } from '../../contexts/PreferencesContext'
@@ -14,6 +14,8 @@ interface AppFrameProps {
   children: React.ReactNode
   statusLabel?: string
   statusAction?: 'privacy' | 'none'
+  refreshing?: boolean
+  onRefresh?: () => void
 }
 
 function statusCopy(mode: 'trip-only' | 'always' | 'paused') {
@@ -25,7 +27,9 @@ function statusCopy(mode: 'trip-only' | 'always' | 'paused') {
 export function AppFrame({
   children,
   statusLabel,
-  statusAction = 'privacy'
+  statusAction = 'privacy',
+  refreshing = false,
+  onRefresh
 }: AppFrameProps) {
   const router = useRouter()
   const { width } = useWindowDimensions()
@@ -328,7 +332,7 @@ export function AppFrame({
                   color: colors.muted
                 }}
               >
-                These settings stay on this device.
+                Reading settings stay on this phone for this account. Privacy mode is saved to the account.
               </Text>
             </View>
           ) : null}
@@ -348,6 +352,11 @@ export function AppFrame({
         }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps='handled'
+        refreshControl={
+          onRefresh ? (
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.brand} colors={[colors.brand]} />
+          ) : undefined
+        }
       >
         {children}
       </ScrollView>

@@ -16,21 +16,25 @@ export interface StoryStep {
     | 'flag-outline'
 }
 
-export function getStorySteps(destinationName: string): StoryStep[] {
+/**
+ * Generic starting point for a new caregiver journey.
+ * It deliberately contains no bus number, stop count, or travel time.
+ * Those facts must come from the caregiver.
+ */
+export function getDefaultJourneySteps(destinationName: string): StoryStep[] {
   return [
-    { id: 'walk', title: 'Walk to the bus stop', detail: '3 minutes', icon: 'walk-outline' },
-    { id: 'wait', title: 'Wait for bus 2', detail: 'Stand near the blue sign', icon: 'time-outline' },
-    { id: 'board', title: 'Get on bus 2', detail: 'Wait for the door to open', icon: 'bus-outline' },
-    { id: 'tap', title: 'Tap your card', detail: 'The reader is near the door', icon: 'card-outline' },
-    { id: 'sit', title: 'Sit near the driver', detail: 'The driver can see you', icon: 'person-outline' },
-    { id: 'ride', title: 'Ride 8 stops', detail: 'About 15 minutes', icon: 'navigate-outline' },
-    { id: 'alight', title: `Get off at ${destinationName}`, detail: 'Press the bell after 7 stops', icon: 'exit-outline' },
-    { id: 'arrive', title: `Walk to ${destinationName}`, detail: 'Follow the last part of the route', icon: 'flag-outline' }
+    { id: 'walk', title: 'Walk to the bus stop', detail: 'Follow the way you practised.', icon: 'walk-outline' },
+    { id: 'wait', title: 'Wait for the bus', detail: 'Stand where you can see the bus.', icon: 'time-outline' },
+    { id: 'board', title: 'Get on the bus', detail: 'Check the bus number before you get on.', icon: 'bus-outline' },
+    { id: 'tap', title: 'Tap your card', detail: 'The reader is near the door.', icon: 'card-outline' },
+    { id: 'sit', title: 'Sit near the driver', detail: 'The driver can see you.', icon: 'person-outline' },
+    { id: 'ride', title: 'Ride to your stop', detail: 'Watch for your stop.', icon: 'navigate-outline' },
+    { id: 'alight', title: `Get off at ${destinationName}`, detail: 'Press the bell when you see your stop.', icon: 'exit-outline' },
+    { id: 'arrive', title: `Walk to ${destinationName}`, detail: 'Follow the last part of the route.', icon: 'flag-outline' }
   ]
 }
 
-
-export const STORY_STEP_ICONS: Record<string, StoryStep['icon']> = {
+const STORY_STEP_ICONS: Record<string, StoryStep['icon']> = {
   walk: 'walk-outline',
   wait: 'time-outline',
   board: 'bus-outline',
@@ -45,79 +49,86 @@ export function getStoryStepIcon(stepId: string): StoryStep['icon'] {
   return STORY_STEP_ICONS[stepId] ?? 'navigate-outline'
 }
 
-export type ScreenStage = 'story' | 'wait' | 'board' | 'tap' | 'ride' | 'alight' | 'arrived'
-
-export const STAGE_INDEX: Record<ScreenStage, number> = {
-  story: 0,
-  wait: 2,
-  board: 3,
-  tap: 4,
-  ride: 6,
-  alight: 7,
-  arrived: 8
+const STEP_STAGE: Record<string, TripStage> = {
+  walk: 'waiting',
+  wait: 'waiting',
+  board: 'boarding',
+  tap: 'on-bus',
+  sit: 'on-bus',
+  ride: 'on-bus',
+  alight: 'arriving',
+  arrive: 'arrived'
 }
 
-export function toTripStage(stage: ScreenStage): TripStage {
-  switch (stage) {
-    case 'story':
-      return 'story'
-    case 'wait':
-      return 'waiting'
+/**
+ * Find the trip stage for a step. Custom steps inherit the last core stage.
+ * This keeps the caregiver status meaningful without inventing a new schema.
+ */
+export function stageForStep(steps: StoryStep[], stepId: string): TripStage {
+  let stage: TripStage = 'waiting'
+  for (const step of steps) {
+    const mapped = STEP_STAGE[step.id]
+    if (mapped) stage = mapped
+    if (step.id === stepId) return stage
+  }
+  return stage
+}
+
+export function sceneForStep(stepId: string): 'stop' | 'door' | 'card' | 'seat' | 'destination' {
+  switch (stepId) {
     case 'board':
-      return 'boarding'
+      return 'door'
     case 'tap':
+      return 'card'
+    case 'sit':
     case 'ride':
-      return 'on-bus'
+      return 'seat'
     case 'alight':
-      return 'arriving'
-    case 'arrived':
-      return 'arrived'
+    case 'arrive':
+      return 'destination'
+    default:
+      return 'stop'
   }
 }
 
-export const STAGE_COPY: Record<
-  Exclude<ScreenStage, 'story' | 'arrived'>,
-  {
-    title: string
-    detail: string
-    scene: 'stop' | 'door' | 'card' | 'seat' | 'destination'
-    primary: string
-    next: ScreenStage
+export function primaryLabelForStep(stepId: string): string {
+  switch (stepId) {
+    case 'wait':
+      return 'The bus has stopped'
+    case 'board':
+      return 'I am on the bus'
+    case 'tap':
+      return 'My card is tapped'
+    case 'ride':
+      return 'I see my stop'
+    case 'alight':
+      return 'I am off the bus'
+    case 'arrive':
+      return 'I have arrived'
+    default:
+      return 'I did it'
   }
-> = {
-  wait: {
-    title: 'Wait for bus 2',
-    detail: 'Stand near the blue sign. When the bus stops, the door will open.',
-    scene: 'stop',
-    primary: 'The bus has stopped',
-    next: 'board'
-  },
-  board: {
-    title: 'Get on bus 2',
-    detail: 'The bus has stopped. The door is open. Check the number: 2.',
-    scene: 'door',
-    primary: 'I am on the bus',
-    next: 'tap'
-  },
-  tap: {
-    title: 'Tap your card',
-    detail: 'Hold your card on the reader near the door. Wait for the green light.',
-    scene: 'card',
-    primary: 'My card is tapped',
-    next: 'ride'
-  },
-  ride: {
-    title: 'Sit near the driver',
-    detail: 'Ride 8 stops. I will count with you.',
-    scene: 'seat',
-    primary: 'I see my stop',
-    next: 'alight'
-  },
-  alight: {
-    title: 'Get off at your stop',
-    detail: 'Press the bell after 7 stops. Then walk to your destination.',
-    scene: 'destination',
-    primary: 'I am off the bus',
-    next: 'arrived'
+}
+
+export function locationForStep(stepId: string): string {
+  switch (stepId) {
+    case 'walk':
+    case 'wait':
+      return 'the bus stop'
+    case 'board':
+      return 'the bus door'
+    case 'tap':
+    case 'sit':
+    case 'ride':
+      return 'the bus'
+    case 'alight':
+      return 'the bus stop'
+    default:
+      return 'the way to your destination'
   }
+}
+
+export function busLabel(busNumber?: string): string {
+  const value = busNumber?.trim()
+  return value ? `bus ${value}` : 'the bus'
 }

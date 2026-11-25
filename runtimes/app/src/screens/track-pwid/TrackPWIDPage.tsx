@@ -39,7 +39,11 @@ export function TrackPWIDPage({
       setLocation(newLocation)
       setLoading(false)
     })
-    return () => unsubscribe()
+    const timer = setTimeout(() => setLoading(false), 5000)
+    return () => {
+      clearTimeout(timer)
+      unsubscribe()
+    }
   }, [pwidPhoneNumber])
 
   const handleCall = () => {
@@ -98,7 +102,7 @@ export function TrackPWIDPage({
               color: colors.brand
             }}
           >
-            Live location
+            {isSharing ? 'Live location' : 'Last known location'}
           </Text>
           <Text
             style={{
@@ -165,7 +169,7 @@ export function TrackPWIDPage({
               <ActivityIndicator size='large' color={colors.brand} />
               <Text style={{ fontSize: scale(14), color: colors.muted }}>Loading location…</Text>
             </View>
-          ) : isSharing && location ? (
+          ) : location ? (
             <View
               style={{
                 height: mapHeight,

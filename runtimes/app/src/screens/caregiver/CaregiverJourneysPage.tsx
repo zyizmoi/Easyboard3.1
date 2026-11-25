@@ -28,7 +28,7 @@ import {
   uploadLocationPhoto
 } from '../../services/storageService'
 import { getPWIDsByCaregiverPhone } from '../../services/userService'
-import { getStoryStepIcon, getStorySteps } from '../trip/tripData'
+import { getDefaultJourneySteps, getStoryStepIcon } from '../trip/tripData'
 import { colors, font, radius, shadow, space } from '../../theme/tokens'
 import type { Journey, JourneyStep, PWIDUser } from '../../types'
 
@@ -44,7 +44,7 @@ function personName(person: PWIDUser) {
 }
 
 function suggestedSteps(destinationName: string): JourneyStep[] {
-  return getStorySteps(destinationName).map(step => ({
+  return getDefaultJourneySteps(destinationName).map(step => ({
     id: step.id,
     title: step.title,
     detail: step.detail
@@ -52,12 +52,14 @@ function suggestedSteps(destinationName: string): JourneyStep[] {
 }
 
 function newJourney(person: PWIDUser): Journey {
-  const destinationName = person.savedPlaces?.[0]?.locationName || 'Home'
+  const firstPlace = person.savedPlaces?.[0]
+  const destinationName = firstPlace?.locationName || 'Home'
   return {
     id: `journey-${Date.now()}`,
     destinationName,
     originName: 'Home',
-    busNumber: '2',
+    busNumber: '',
+    destinationLatLng: firstPlace?.address?.latlng,
     steps: suggestedSteps(destinationName),
     updatedAt: Date.now()
   }
@@ -94,6 +96,10 @@ export function CaregiverJourneysPage() {
           return
         }
         setAllowed(true)
+        if (stored.preview) {
+          setPeople([])
+          return
+        }
         const list = await getPWIDsByCaregiverPhone(stored.phoneNumber)
         const unique = Array.from(
           new Map(list.map(person => [person.phoneNumber, person])).values()
@@ -155,17 +161,25 @@ export function CaregiverJourneysPage() {
     setScreen('edit')
   }
 
-  const chooseDestination = (destinationName: string) => {
+  const chooseDestination = (destinationName: string, latlng?: { latitude: number; longitude: number }) => {
     setDraft(current => {
       if (!current) return current
-      const photos = new Map(current.steps.map(step => [step.id, step.photoUrl]))
+      const previous = current.destinationName
+      const defaults = new Map(suggestedSteps(destinationName).map(step => [step.id, step]))
       return {
         ...current,
         destinationName,
-        steps: suggestedSteps(destinationName).map(step => ({
-          ...step,
-          photoUrl: photos.get(step.id)
-        }))
+        destinationLatLng: latlng,
+        steps: current.steps.map(step => {
+          const fallback = defaults.get(step.id)
+          if (step.id === 'alight' && fallback && step.title === `Get off at ${previous}`) {
+            return { ...step, title: fallback.title }
+          }
+          if (step.id === 'arrive' && fallback && step.title === `Walk to ${previous}`) {
+            return { ...step, title: fallback.title }
+          }
+          return step
+        })
       }
     })
   }
@@ -232,14 +246,16 @@ export function CaregiverJourneysPage() {
     setSaving(true)
     try {
       const journey: Journey = {
-        ...draft,
+        id: draft.id,
         destinationName,
         originName: draft.originName.trim() || 'Home',
-        busNumber: draft.busNumber.trim() || '2',
+        busNumber: draft.busNumber.trim(),
+        ...(draft.destinationLatLng ? { destinationLatLng: draft.destinationLatLng } : {}),
         steps: draft.steps.map(step => ({
-          ...step,
+          id: step.id,
           title: step.title.trim(),
-          detail: step.detail.trim()
+          detail: step.detail.trim(),
+          ...(step.photoUrl ? { photoUrl: step.photoUrl } : {})
         })),
         updatedAt: Date.now()
       }
@@ -609,7 +625,7 @@ function JourneyListView({
                       To {journey.destinationName}
                     </Text>
                     <Text style={{ fontSize: scale(13), lineHeight: bodyLine(13), color: colors.muted }}>
-                      Bus {journey.busNumber} · {journey.steps.length} steps · {photos} photo{photos === 1 ? '' : 's'}
+                      {journey.busNumber ? `Bus ${journey.busNumber} · ` : ''}{journey.steps.length} steps · {photos} photo{photos === 1 ? '' : 's'}
                     </Text>
                   </View>
                 </View>
@@ -678,7 +694,7 @@ function JourneyEditor({
   saving: boolean
   photoStepId: string | null
   photoBusyStepId: string | null
-  onChooseDestination: (name: string) => void
+  onChooseDestination: (name: string, latlng?: { latitude: number; longitude: number }) => void
   onUpdateStep: (stepId: string, updates: Partial<JourneyStep>) => void
   onOpenPhoto: (stepId: string | null) => void
   onAddPhoto: (stepId: string, source: 'camera' | 'library') => void
@@ -750,7 +766,7 @@ function JourneyEditor({
                 }
                 return step
               })
-              return { ...current, destinationName: value, steps }
+              return { ...current, destinationName: value, destinationLatLng: undefined, steps }
             })
           }
           maxLength={40}
@@ -769,7 +785,7 @@ function JourneyEditor({
                   key={place.locationName}
                   accessibilityRole='button'
                   accessibilityState={{ selected: draft.destinationName === place.locationName }}
-                  onPress={() => onChooseDestination(place.locationName)}
+                  onPress={() => onChooseDestination(place.locationName, place.address?.latlng)}
                   style={{
                     minHeight: 44,
                     paddingHorizontal: 12,

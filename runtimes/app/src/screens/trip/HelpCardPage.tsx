@@ -10,6 +10,7 @@ import { ActionButton, Toast } from '../../components/ui'
 import { usePreferences } from '../../contexts/PreferencesContext'
 import { useToast } from '../../hooks/useToast'
 import { getUserStorage } from '../../services/storageService'
+import { getUserData } from '../../services/userService'
 import { colors, font, radius, shadow } from '../../theme/tokens'
 import type { PWIDUser } from '../../types'
 
@@ -23,14 +24,12 @@ export function HelpCardPage() {
   const params = useLocalSearchParams<{
     destination?: string
     location?: string
-    caregiverName?: string
-    caregiverPhone?: string
   }>()
 
   const [profile, setProfile] = useState<{ name: string; caregiverName: string; caregiverPhone: string }>({
     name: '',
-    caregiverName: params.caregiverName || 'your caregiver',
-    caregiverPhone: params.caregiverPhone || ''
+    caregiverName: 'your caregiver',
+    caregiverPhone: ''
   })
   const [showMode, setShowMode] = useState(false)
 
@@ -39,14 +38,18 @@ export function HelpCardPage() {
       const stored = await getUserStorage()
       if (!stored) return
       const pwid = stored as unknown as PWIDUser
-      setProfile(current => ({
-        name: pwid.name?.trim() || current.name,
-        caregiverName:
-          current.caregiverName && current.caregiverName !== 'your caregiver'
-            ? current.caregiverName
-            : 'your caregiver',
-        caregiverPhone: current.caregiverPhone || pwid.caregiverPhone || ''
-      }))
+      let caregiverName = 'your caregiver'
+      if (pwid.caregiverPhone) {
+        const caregiver = await getUserData(pwid.caregiverPhone)
+        if (caregiver?.name) caregiverName = caregiver.name
+      }
+      setProfile({
+        name: pwid.name?.trim() || '',
+        caregiverName,
+        // Always use the saved caregiver number. A deep link must never be
+        // able to put a different number on the card shown to a stranger.
+        caregiverPhone: pwid.caregiverPhone || ''
+      })
     }
     load().catch(error => console.error('Error loading help card:', error))
   }, [])

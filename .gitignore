@@ -76,6 +76,8 @@ dist
 # Gatsby files
 .cache/
 public
+!runtimes/app/public/
+!runtimes/app/public/firebase-messaging-sw.js
 
 # Storybook build outputs
 .out

@@ -10,6 +10,8 @@ import Constants from 'expo-constants'
 import * as SecureStore from 'expo-secure-store'
 import type { PWIDUser, UserStorage } from '../types'
 import type { IStorageService } from './storageService'
+import { clearLocalSessionData } from './localSession'
+import { notifySessionChanged } from './sessionEvents'
 
 export const storageService: IStorageService = {
   setUserStorage: async (userStorage: UserStorage) => {
@@ -18,6 +20,7 @@ export const storageService: IStorageService = {
         Constants?.expoConfig?.extra?.userStorageKey,
         JSON.stringify(userStorage)
       )
+      notifySessionChanged()
     } catch (error) {
       console.error('Error saving user data:', error)
       throw error
@@ -41,6 +44,7 @@ export const storageService: IStorageService = {
 
   clearUserStorage: async () => {
     try {
+      await clearLocalSessionData()
       const keysToDelete = [
         Constants?.expoConfig?.extra?.userStorageKey,
         Constants?.expoConfig?.extra?.settingsStoredKey,
@@ -62,6 +66,7 @@ export const storageService: IStorageService = {
             : Promise.resolve()
         )
       )
+      notifySessionChanged()
       console.log('All user data cleared successfully')
     } catch (error) {
       console.error('Error clearing user data:', error)

@@ -1,5 +1,9 @@
 import type { Journey, PWIDUser } from '../types'
-import { getUserData, updateUserData } from './userService'
+import {
+  deletePWIDJourney,
+  getUserData,
+  savePWIDJourney
+} from './userService'
 
 function sorted(journeys: Journey[]) {
   return [...journeys].sort((a, b) => b.updatedAt - a.updatedAt)
@@ -16,34 +20,14 @@ export async function saveJourney(
   pwidPhone: string,
   journey: Journey
 ): Promise<Journey[]> {
-  const existing = await getJourneys(pwidPhone)
-  const next = sorted([
-    journey,
-    ...existing.filter(item => item.id !== journey.id)
-  ])
-  await updateUserData(pwidPhone, { journeys: next })
-  return next
+  const next = await savePWIDJourney(pwidPhone, journey)
+  return sorted(next)
 }
 
 export async function deleteJourney(
   pwidPhone: string,
   journeyId: string
 ): Promise<Journey[]> {
-  const existing = await getJourneys(pwidPhone)
-  const next = existing.filter(item => item.id !== journeyId)
-  await updateUserData(pwidPhone, { journeys: next })
-  return next
-}
-
-export function findJourneyForDestination(
-  journeys: Journey[],
-  destinationName: string
-): Journey | null {
-  const target = destinationName.trim().toLowerCase()
-  return (
-    journeys.find(
-      journey =>
-        journey.destinationName.trim().toLowerCase() === target
-    ) ?? null
-  )
+  const next = await deletePWIDJourney(pwidPhone, journeyId)
+  return sorted(next)
 }

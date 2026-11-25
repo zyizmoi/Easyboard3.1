@@ -12,6 +12,7 @@ export async function seedPreviewUser(role: 'PWID' | 'CAREGIVER' = 'PWID') {
     createdAt: now,
     updatedAt: now,
     loggedAt: now,
+    preview: true,
     caregiverPhone: role === 'PWID' ? '6522222222' : undefined,
     savedPlaces: role === 'PWID' ? [
       {

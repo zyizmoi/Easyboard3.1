@@ -18,9 +18,10 @@ import { usePreferences } from '../../contexts/PreferencesContext'
 import { useLocationSharing } from '../../contexts/LocationSharingContext'
 import { useCallCaregiver } from '../../hooks/useCallCaregiver'
 import { useToast } from '../../hooks/useToast'
-import { findJourneyForDestination } from '../../services/journeyService'
 import {
+  createTripId,
   getActiveTrip,
+  initTripStore,
   setActiveTrip,
   type ActiveTrip,
   type TripStage
@@ -30,12 +31,12 @@ import { getUserData, setPWIDActiveTrip } from '../../services/userService'
 import { colors, font, radius, shadow, space } from '../../theme/tokens'
 import type { Journey, PWIDUser } from '../../types'
 import {
-  STAGE_COPY,
-  STAGE_INDEX,
+  busLabel,
   getStoryStepIcon,
-  getStorySteps,
-  toTripStage,
-  type ScreenStage,
+  locationForStep,
+  primaryLabelForStep,
+  sceneForStep,
+  stageForStep,
   type StoryStep
 } from './tripData'
 
@@ -44,157 +45,258 @@ interface Profile {
   phoneNumber: string
   caregiverName: string
   caregiverPhone: string
+  savedPlaces: PWIDUser['savedPlaces']
 }
 
-function stageFromTripStage(stage: TripStage): ScreenStage {
-  switch (stage) {
-    case 'waiting':
-      return 'wait'
-    case 'boarding':
-      return 'board'
-    case 'on-bus':
-      return 'ride'
-    case 'arriving':
-      return 'alight'
-    case 'arrived':
-      return 'arrived'
-    default:
-      return 'story'
-  }
+interface LatLng {
+  lat: number
+  lng: number
 }
 
 export function TripPage() {
   const router = useRouter()
   const { width } = useWindowDimensions()
   const { preferences, scale, bodyLine } = usePreferences()
-  const { isLocationSharing, setIsLocationSharing } = useLocationSharing()
+  const {
+    isLocationSharing,
+    setIsLocationSharing,
+    setDestination,
+    permissionDenied,
+    sharingError,
+    autoStopped,
+    resetAutoStop,
+    retrySharing
+  } = useLocationSharing()
   const { showToast, message } = useToast()
   const callCaregiver = useCallCaregiver()
 
   const params = useLocalSearchParams<{
     destinationName?: string
+    journeyId?: string
     practice?: string
-    stage?: string
+    lat?: string
+    lng?: string
   }>()
-  const destinationName = params.destinationName || 'Blue Library'
+  const requestedJourneyId = params.journeyId || ''
+  const routeDestinationName = params.destinationName || ''
   const initialPractice = params.practice === '1'
-  const originName = destinationName === 'Home' ? 'Here' : 'Home'
-  const tripTitle =
-    destinationName === 'Home' ? 'Going home' : originName === 'Here' ? `To ${destinationName}` : `${originName} to ${destinationName}`
   const isWide = width >= 960
 
-  const existingTrip = useMemo<ActiveTrip | null>(() => getActiveTrip(), [])
-
-  const initialStage = useMemo<ScreenStage>(() => {
-    const requested = params.stage as ScreenStage | undefined
-    if (requested && requested in STAGE_INDEX) return requested
-    if (existingTrip && existingTrip.destination === destinationName) {
-      return stageFromTripStage(existingTrip.stage)
-    }
-    return 'story'
-  }, [destinationName, existingTrip, params.stage])
-
-  const [stage, setStage] = useState<ScreenStage>(initialStage)
-  const [isPractice, setIsPractice] = useState(initialPractice)
+  const [existingTrip, setExistingTrip] = useState<ActiveTrip | null>(getActiveTrip)
+  const [hydrated, setHydrated] = useState(false)
   const [profile, setProfile] = useState<Profile>({
     name: '',
     phoneNumber: '',
     caregiverName: 'your caregiver',
-    caregiverPhone: ''
+    caregiverPhone: '',
+    savedPlaces: []
   })
-  const [checks, setChecks] = useState({ card: false, battery: false, headphones: false })
   const [journey, setJourney] = useState<Journey | null>(null)
+  const [journeyLoaded, setJourneyLoaded] = useState(false)
+  const [stepIndex, setStepIndex] = useState(-1)
+  const [isPractice, setIsPractice] = useState(initialPractice)
+  const [preview, setPreview] = useState(false)
+  const [checks, setChecks] = useState({ card: false, battery: false, headphones: false })
   const [scriptOpen, setScriptOpen] = useState(false)
   const [missedStop, setMissedStop] = useState(false)
   const [busMissed, setBusMissed] = useState(false)
+  const [destinationCoords, setDestinationCoords] = useState<LatLng | null>(null)
+  const resumed = useRef(false)
   const startedAt = useRef(existingTrip?.startedAt || 0)
-  const tripId = useRef(existingTrip?.id || 'local-trip')
+  const tripId = useRef(
+    existingTrip?.id && existingTrip.id !== 'local-trip' ? existingTrip.id : createTripId()
+  )
+
+  useEffect(() => {
+    void initTripStore().then(() => {
+      setExistingTrip(getActiveTrip())
+      setHydrated(true)
+    })
+  }, [])
 
   useEffect(() => {
     const load = async () => {
       const stored = await getUserStorage()
-      if (!stored) return
+      if (!stored) {
+        setJourneyLoaded(true)
+        return
+      }
       const pwid = stored as unknown as PWIDUser
+      const isPreview = Boolean((stored as { preview?: boolean }).preview)
       let caregiverName = 'your caregiver'
-      if (pwid.caregiverPhone) {
+      if (pwid.caregiverPhone && !isPreview) {
         const caregiver = await getUserData(pwid.caregiverPhone)
         if (caregiver?.name) caregiverName = caregiver.name
       }
+      setPreview(Boolean((stored as { preview?: boolean }).preview))
       setProfile({
         name: pwid.name?.trim() || '',
         phoneNumber: pwid.phoneNumber || '',
         caregiverName,
-        caregiverPhone: pwid.caregiverPhone || ''
+        caregiverPhone: pwid.caregiverPhone || '',
+        savedPlaces: pwid.savedPlaces ?? []
       })
     }
     load().catch(error => console.error('Error loading trip profile:', error))
   }, [])
 
   useEffect(() => {
-    if (!profile.phoneNumber) return
+    if (!hydrated || !profile.phoneNumber || preview) {
+      if (preview) setJourneyLoaded(true)
+      return
+    }
     let active = true
     getUserData(profile.phoneNumber)
       .then(data => {
         if (!active) return
-        const journeys = (data as PWIDUser | null)?.journeys ?? []
-        setJourney(findJourneyForDestination(journeys, destinationName))
+        const pwid = data as PWIDUser | null
+        const journeys = pwid?.journeys ?? []
+        // Journeys are identified by id. Name matching is deliberately not used:
+        // two places can share a name and a caregiver may have moved a route.
+        const match = requestedJourneyId
+          ? journeys.find(item => item.id === requestedJourneyId) ?? null
+          : null
+        setJourney(match)
+        setJourneyLoaded(true)
+
+        const coords =
+          params.lat && params.lng
+            ? { lat: Number(params.lat), lng: Number(params.lng) }
+            : match
+              ? match.destinationLatLng
+                ? { lat: match.destinationLatLng.latitude, lng: match.destinationLatLng.longitude }
+                : coordsForDestination(pwid?.savedPlaces, match.destinationName)
+              : null
+        setDestinationCoords(coords && Number.isFinite(coords.lat) && Number.isFinite(coords.lng) ? coords : null)
       })
-      .catch(error => console.error('Error loading journey:', error))
+      .catch(error => {
+        console.error('Error loading journey:', error)
+        if (active) setJourneyLoaded(true)
+      })
     return () => {
       active = false
     }
-  }, [destinationName, profile.phoneNumber])
+  }, [hydrated, params.lat, params.lng, preview, profile.phoneNumber, requestedJourneyId])
 
   useEffect(() => {
-    if (stage === 'story') return
-    if (isPractice) {
-      // Practice is a rehearsal. It must not publish a trip or share location.
-      setIsLocationSharing(false)
+    if (!journey || resumed.current) return
+    resumed.current = true
+    if (existingTrip && existingTrip.journeyId === journey.id && !existingTrip.practice) {
+      if (existingTrip.stage === 'arrived') {
+        setStepIndex(journey.steps.length)
+        return
+      }
+      const index = existingTrip.stepId
+        ? journey.steps.findIndex(step => step.id === existingTrip.stepId)
+        : -1
+      if (index >= 0) setStepIndex(index)
+    }
+  }, [existingTrip, journey])
+
+  const steps: StoryStep[] = useMemo(
+    () => (journey?.steps ?? []).map(step => ({ ...step, icon: getStoryStepIcon(step.id) })),
+    [journey]
+  )
+  const currentStep = stepIndex >= 0 && stepIndex < steps.length ? steps[stepIndex] : null
+  const arrived = stepIndex >= steps.length && stepIndex >= 0
+  const stage: TripStage = arrived
+    ? 'arrived'
+    : currentStep
+      ? stageForStep(steps, currentStep.id)
+      : 'story'
+  const destinationName =
+    journey?.destinationName || routeDestinationName || 'your destination'
+  const originName = journey?.originName || (destinationName === 'Home' ? 'Here' : 'Home')
+  const tripTitle =
+    destinationName === 'Home' ? 'Going home' : originName ? `${originName} to ${destinationName}` : `To ${destinationName}`
+
+  useEffect(() => {
+    if (stepIndex === -1 || isPractice) {
+      setDestination(null)
+      return
+    }
+    setDestination(stepIndex >= steps.length ? null : destinationCoords)
+  }, [destinationCoords, isPractice, setDestination, stepIndex, steps.length])
+
+  // Publish the shared trip only when the person is on a real trip and has not
+  // chosen Paused. Practice never publishes. Back-to-story clears the trip.
+  useEffect(() => {
+    if (!journey || !profile.phoneNumber || stepIndex === -1 || isPractice || preview) {
+      return
+    }
+    if (preferences.privacyMode === 'paused') {
+      if (profile.phoneNumber && !preview) {
+        setPWIDActiveTrip(profile.phoneNumber, null).catch(error =>
+          console.error('Error clearing paused trip:', error)
+        )
+      }
       return
     }
     if (!startedAt.current) startedAt.current = Date.now()
-    if (stage === 'arrived' || preferences.privacyMode === 'paused') {
-      setIsLocationSharing(false)
-    } else if (!isLocationSharing) {
-      setIsLocationSharing(true)
-    }
     const trip: ActiveTrip = {
-      id: existingTrip?.id || tripId.current,
-      travellerName: profile.name || existingTrip?.travellerName || 'Your person',
-      travellerPhone: profile.phoneNumber || existingTrip?.travellerPhone || '',
-      destination: destinationName,
-      origin: originName,
-      stage: toTripStage(stage),
-      busNumber: journey?.busNumber || '2',
+      id: tripId.current,
+      travellerName: profile.name || 'Your person',
+      travellerPhone: profile.phoneNumber,
+      journeyId: journey.id,
+      destination: journey.destinationName,
+      origin: journey.originName,
+      stage,
+      stepId: arrived ? 'arrived' : currentStep?.id,
+      busNumber: journey.busNumber?.trim() || '',
       startedAt: startedAt.current,
       updatedAt: Date.now(),
       caregiverName: profile.caregiverName,
       caregiverPhone: profile.caregiverPhone,
-      practice: isPractice
+      practice: false,
+      privacyMode: preferences.privacyMode,
+      ...(destinationCoords ? { destinationLatLng: destinationCoords } : {})
     }
     setActiveTrip(trip)
-    if (profile.phoneNumber) {
-      setPWIDActiveTrip(profile.phoneNumber, trip).catch(error =>
-        console.error('Error syncing active trip:', error)
-      )
-    }
-  }, [destinationName, existingTrip, isLocationSharing, isPractice, journey?.busNumber, originName, preferences.privacyMode, profile, setIsLocationSharing, stage])
+    setPWIDActiveTrip(profile.phoneNumber, trip).catch(error =>
+      console.error('Error syncing active trip:', error)
+    )
+  }, [
+    arrived,
+    currentStep?.id,
+    destinationCoords,
+    isPractice,
+    journey,
+    preferences.privacyMode,
+    preview,
+    profile,
+    stage,
+    stepIndex
+  ])
 
-  const baseCopy = stage !== 'story' && stage !== 'arrived' ? STAGE_COPY[stage] : null
-  const journeyStep = journey?.steps.find(step => step.id === stage)
-  const copy = baseCopy
-    ? {
-        ...baseCopy,
-        ...(journeyStep
-          ? { title: journeyStep.title, detail: journeyStep.detail }
-          : stage === 'alight'
-            ? {
-                title: `Get off at ${destinationName}`,
-                detail: `Press the bell after 7 stops. ${destinationName} is next.`
-              }
-            : {})
-      }
-    : null
+  // Sharing is driven by the privacy mode and trip position, not by the
+  // provider's current boolean. A permission failure must not be mistaken for
+  // "not sharing yet" and retried forever.
+  useEffect(() => {
+    if (preferences.privacyMode === 'paused') {
+      if (isLocationSharing) setIsLocationSharing(false)
+      return
+    }
+    // Always is owned by the location provider, including after a trip ends.
+    if (preferences.privacyMode === 'always') return
+    const shouldShare = stepIndex >= 0 && !arrived && !isPractice
+    if (!shouldShare) {
+      if (isLocationSharing) setIsLocationSharing(false)
+      return
+    }
+    if (!isLocationSharing && !permissionDenied && !sharingError && !autoStopped) {
+      setIsLocationSharing(true)
+    }
+  }, [
+    arrived,
+    autoStopped,
+    isLocationSharing,
+    isPractice,
+    permissionDenied,
+    preferences.privacyMode,
+    setIsLocationSharing,
+    sharingError,
+    stepIndex
+  ])
 
   const handleCall = useCallback(async () => {
     if (!profile.caregiverPhone) {
@@ -205,51 +307,94 @@ export function TripPage() {
   }, [callCaregiver, profile.caregiverPhone, showToast])
 
   const openHelp = useCallback(() => {
-    const params = new URLSearchParams({
+    const search = new URLSearchParams({
       destination: destinationName,
-      location:
-        stage === 'wait'
-          ? 'the bus stop'
-          : stage === 'board'
-            ? 'the bus door'
-            : stage === 'ride'
-              ? 'the bus'
-              : 'the way to your destination',
-      caregiverName: profile.caregiverName,
-      caregiverPhone: profile.caregiverPhone
+      location: currentStep ? locationForStep(currentStep.id) : ''
     })
-    router.navigate(`/help-card?${params.toString()}`)
-  }, [destinationName, profile, router, stage])
+    router.navigate(`/help-card?${search.toString()}`)
+  }, [currentStep, destinationName, router])
 
   const startTrip = (practiceMode = isPractice) => {
+    if (!journey) return
+    resetAutoStop()
     setIsPractice(practiceMode)
     startedAt.current = Date.now()
-    if (!practiceMode && preferences.privacyMode !== 'paused') setIsLocationSharing(true)
-    setStage('wait')
-  }
-
-  const nextStage = () => {
-    if (!copy) return
-    setStage(copy.next)
+    setStepIndex(0)
     setScriptOpen(false)
     setMissedStop(false)
     setBusMissed(false)
   }
 
-  const storySteps: StoryStep[] = journey?.steps?.length
-    ? journey.steps.map(step => ({
-        ...step,
-        icon: getStoryStepIcon(step.id)
-      }))
-    : getStorySteps(destinationName)
-  const currentStepNumber =
-    stage === 'story' || stage === 'arrived'
-      ? 0
-      : Math.max(1, storySteps.findIndex(step => step.id === stage) + 1)
-  const readText = copy ? `${copy.title}. ${copy.detail}` : ''
+  const endTrip = useCallback(() => {
+    setStepIndex(-1)
+    setActiveTrip(null)
+    setDestination(null)
+    if (preferences.privacyMode !== 'always') setIsLocationSharing(false)
+    setIsPractice(false)
+    if (profile.phoneNumber && !preview) {
+      setPWIDActiveTrip(profile.phoneNumber, null).catch(error =>
+        console.error('Error clearing active trip:', error)
+      )
+    }
+  }, [preferences.privacyMode, preview, profile.phoneNumber, setDestination, setIsLocationSharing])
+
+  const nextStep = () => {
+    if (stepIndex < 0) return
+    if (stepIndex + 1 >= steps.length) {
+      setStepIndex(steps.length)
+    } else {
+      setStepIndex(stepIndex + 1)
+    }
+    setScriptOpen(false)
+    setMissedStop(false)
+    setBusMissed(false)
+  }
+
+  const currentStepNumber = arrived ? steps.length : Math.max(1, stepIndex + 1)
+  const readText = currentStep ? `${currentStep.title}. ${currentStep.detail}` : ''
+
+  if (!journeyLoaded) {
+    return (
+      <AppFrame>
+        <View style={{ minHeight: 320, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontSize: scale(16), color: colors.muted }}>Loading this trip…</Text>
+        </View>
+      </AppFrame>
+    )
+  }
+
+  if (!journey) {
+    return (
+      <AppFrame>
+        <View
+          style={{
+            maxWidth: 640,
+            marginHorizontal: 'auto',
+            gap: 16,
+            backgroundColor: colors.surface,
+            borderWidth: 1,
+            borderColor: colors.line,
+            borderRadius: radius.xl,
+            padding: 24,
+            boxShadow: shadow.card
+          }}
+        >
+          <Ionicons name='map-outline' size={scale(34)} color={colors.brand} />
+          <Text style={{ fontFamily: font.display, fontSize: scale(32), color: colors.ink }}>
+            This trip is not set up.
+          </Text>
+          <Text style={{ fontSize: scale(16), lineHeight: bodyLine(16), color: colors.muted }}>
+            Ask your caregiver to add this place and the steps you take. Then come back here.
+          </Text>
+          <ActionButton label='Call caregiver' icon='call-outline' onPress={handleCall} />
+          <ActionButton label='Go home' variant='ghost' onPress={() => router.navigate('/home')} />
+        </View>
+      </AppFrame>
+    )
+  }
 
   return (
-    <AppFrame statusLabel={isLocationSharing ? 'Sharing this trip' : 'Sharing off'}>
+    <AppFrame statusLabel={preferences.privacyMode === 'paused' ? 'Paused' : isLocationSharing ? 'Sharing this trip' : 'Sharing off'}>
       <View style={{ gap: space.lg }}>
         <View
           style={{
@@ -262,23 +407,16 @@ export function TripPage() {
         >
           <Pressable
             accessibilityRole='button'
-            accessibilityLabel='Back to trip story'
-            onPress={() => (stage === 'story' ? router.navigate('/home') : setStage('story'))}
+            accessibilityLabel={stepIndex === -1 ? 'Back to home' : 'End trip and return to trip story'}
+            onPress={() => (stepIndex === -1 ? router.navigate('/home') : endTrip())}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 44 }}
           >
             <Ionicons name='arrow-back' size={scale(20)} color={colors.brand} />
             <Text style={{ fontSize: scale(14), fontWeight: '700', color: colors.brand }}>
-              {stage === 'story' ? 'Home' : 'Trip story'}
+              {stepIndex === -1 ? 'Home' : 'End trip'}
             </Text>
           </Pressable>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 8,
-              flexWrap: 'wrap'
-            }}
-          >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             <View
               style={{
                 backgroundColor: isPractice ? colors.warningSoft : colors.brandSoft,
@@ -300,46 +438,71 @@ export function TripPage() {
               </Text>
             </View>
             <ReadAloudButton
-              text={
-                stage === 'story'
-                  ? `${tripTitle}. 8 steps. About 25 minutes.`
-                  : readText
-              }
+              text={stepIndex === -1 ? `${tripTitle}. ${steps.length} steps.` : readText}
             />
           </View>
         </View>
 
-        {stage === 'story' ? (
+        {preferences.privacyMode === 'paused' ? (
+          <View
+            style={{
+              backgroundColor: colors.warningSoft,
+              borderRadius: radius.md,
+              padding: 14,
+              gap: 6
+            }}
+          >
+            <Text style={{ fontSize: scale(14), fontWeight: '800', color: colors.warning }}>
+              Sharing is paused.
+            </Text>
+            <Text style={{ fontSize: scale(13), lineHeight: bodyLine(13), color: colors.inkSoft }}>
+              Your caregiver cannot see this trip. Your route still works on this phone.
+            </Text>
+          </View>
+        ) : null}
+
+        {permissionDenied || sharingError ? (
+          <View
+            style={{
+              backgroundColor: colors.warningSoft,
+              borderRadius: radius.md,
+              padding: 14,
+              gap: 8
+            }}
+          >
+            <Text style={{ fontSize: scale(14), lineHeight: bodyLine(14), color: colors.inkSoft }}>
+              Location is off. {sharingError || 'Allow location to share this trip.'}
+            </Text>
+            <ActionButton label='Try location again' variant='secondary' size='sm' onPress={retrySharing} />
+          </View>
+        ) : null}
+
+        {stepIndex === -1 ? (
           <StoryView
             title={tripTitle}
-            steps={storySteps}
-            busNumber={journey?.busNumber || '2'}
+            steps={steps}
+            busNumber={journey.busNumber}
             isWide={isWide}
             checks={checks}
             onToggleCheck={key => setChecks(current => ({ ...current, [key]: !current[key] }))}
-            onStart={() => startTrip(isPractice)}
+            onStart={() => startTrip(false)}
             onPractice={() => startTrip(true)}
             onCall={handleCall}
             scale={scale}
             bodyLine={bodyLine}
           />
-        ) : stage === 'arrived' ? (
+        ) : arrived ? (
           <ArrivedView
             destinationName={destinationName}
             scale={scale}
             bodyLine={bodyLine}
             onDone={() => {
-              setActiveTrip(null)
-              if (profile.phoneNumber) {
-                setPWIDActiveTrip(profile.phoneNumber, null).catch(error =>
-                  console.error('Error clearing active trip:', error)
-                )
-              }
+              endTrip()
               router.navigate('/home')
             }}
             onHelp={openHelp}
           />
-        ) : (
+        ) : currentStep ? (
           <View style={{ flexDirection: isWide ? 'row' : 'column', gap: space.lg, alignItems: 'stretch' }}>
             <View
               style={{
@@ -356,21 +519,21 @@ export function TripPage() {
             >
               <ProgressBar
                 current={currentStepNumber}
-                total={storySteps.length}
-                label={`Step ${currentStepNumber} of ${storySteps.length} · ${destinationName}`}
+                total={steps.length}
+                label={`Step ${currentStepNumber} of ${steps.length} · ${destinationName}`}
               />
               <ScenePanel
-                kind={copy?.scene ?? 'stop'}
+                kind={sceneForStep(currentStep.id)}
                 caption={
-                  stage === 'wait'
-                    ? 'The bus stop near the blue sign'
-                    : stage === 'board'
-                      ? `The open door on bus ${journey?.busNumber || '2'}`
-                      : stage === 'tap'
-                        ? 'The card reader by the door'
-                        : stage === 'ride'
-                          ? 'A seat near the driver'
-                          : destinationName
+                  currentStep.id === 'board'
+                    ? `The open door on ${busLabel(journey.busNumber)}`
+                    : currentStep.id === 'tap'
+                      ? 'The card reader by the door'
+                      : currentStep.id === 'ride'
+                        ? 'A seat near the driver'
+                        : currentStep.id === 'alight' || currentStep.id === 'arrive'
+                          ? destinationName
+                          : 'The bus stop'
                 }
               />
               <View style={{ gap: 6 }}>
@@ -384,7 +547,7 @@ export function TripPage() {
                     color: colors.ink
                   }}
                 >
-                  {copy?.title}
+                  {currentStep.title}
                 </Text>
                 <Text
                   style={{
@@ -394,30 +557,16 @@ export function TripPage() {
                     maxWidth: 560
                   }}
                 >
-                  {copy?.detail}
+                  {currentStep.detail}
                 </Text>
               </View>
 
               {scriptOpen ? (
-                <View
-                  style={{
-                    backgroundColor: colors.brandSoft,
-                    borderRadius: radius.md,
-                    padding: 16,
-                    gap: 8
-                  }}
-                >
+                <View style={{ backgroundColor: colors.brandSoft, borderRadius: radius.md, padding: 16, gap: 8 }}>
                   <Text style={{ fontSize: scale(13), fontWeight: '800', color: colors.brand }}>
                     Ask the driver
                   </Text>
-                  <Text
-                    style={{
-                      fontSize: scale(19),
-                      lineHeight: bodyLine(19),
-                      fontWeight: '700',
-                      color: colors.ink
-                    }}
-                  >
+                  <Text style={{ fontSize: scale(19), lineHeight: bodyLine(19), fontWeight: '700', color: colors.ink }}>
                     “Does this bus go to {destinationName}?”
                   </Text>
                   <Pressable
@@ -426,9 +575,7 @@ export function TripPage() {
                     onPress={() => setScriptOpen(false)}
                     style={{ minHeight: 44, alignSelf: 'flex-start', justifyContent: 'center' }}
                   >
-                    <Text style={{ fontSize: scale(14), fontWeight: '700', color: colors.brand }}>
-                      Close
-                    </Text>
+                    <Text style={{ fontSize: scale(14), fontWeight: '700', color: colors.brand }}>Close</Text>
                   </Pressable>
                 </View>
               ) : null}
@@ -437,7 +584,7 @@ export function TripPage() {
                 <AlertCard
                   tone='warning'
                   title='The bus did not stop'
-                  detail={`Wait for the next bus ${journey?.busNumber || '2'}. It will come in 8 minutes. You are still in the right place.`}
+                  detail={`Wait for the next ${busLabel(journey.busNumber)}. You are still in the right place.`}
                   primaryLabel='I am still waiting'
                   onPrimary={() => setBusMissed(false)}
                   scale={scale}
@@ -449,7 +596,7 @@ export function TripPage() {
                 <AlertCard
                   tone='danger'
                   title='Stay on the bus'
-                  detail='We are calling your caregiver now. Do not get off at the next stop unless it is safe.'
+                  detail='Call your caregiver now. Stay on the bus until you can get off safely.'
                   primaryLabel='Call caregiver'
                   onPrimary={handleCall}
                   secondaryLabel='I am okay'
@@ -460,7 +607,7 @@ export function TripPage() {
               ) : null}
 
               <View style={{ gap: 10 }}>
-                <ActionButton label={copy?.primary ?? 'Continue'} onPress={nextStage} fullWidth />
+                <ActionButton label={primaryLabelForStep(currentStep.id)} onPress={nextStep} fullWidth />
                 <ActionButton
                   label='I’m not sure'
                   variant='ghost'
@@ -468,7 +615,7 @@ export function TripPage() {
                   onPress={openHelp}
                   fullWidth
                 />
-                {stage === 'wait' ? (
+                {currentStep.id === 'wait' ? (
                   <Pressable
                     accessibilityRole='button'
                     accessibilityLabel='The bus did not stop'
@@ -480,7 +627,7 @@ export function TripPage() {
                     </Text>
                   </Pressable>
                 ) : null}
-                {stage === 'board' ? (
+                {currentStep.id === 'board' ? (
                   <Pressable
                     accessibilityRole='button'
                     accessibilityLabel='Is this my bus?'
@@ -492,7 +639,7 @@ export function TripPage() {
                     </Text>
                   </Pressable>
                 ) : null}
-                {stage === 'ride' ? (
+                {currentStep.id === 'ride' ? (
                   <Pressable
                     accessibilityRole='button'
                     accessibilityLabel='I missed my stop'
@@ -512,7 +659,7 @@ export function TripPage() {
                 destinationName={destinationName}
                 stage={stage}
                 isPractice={isPractice}
-                busNumber={journey?.busNumber || '2'}
+                busNumber={journey.busNumber}
                 scale={scale}
                 bodyLine={bodyLine}
               />
@@ -530,13 +677,11 @@ export function TripPage() {
                   If something changes
                 </Text>
                 <Text style={{ fontSize: scale(15), lineHeight: bodyLine(15), color: colors.ink }}>
-                  {stage === 'wait'
-                    ? 'If the bus is late, wait where you are. We will tell you when it comes.'
-                    : stage === 'ride'
-                      ? 'If you miss your stop, stay on the bus. We will call your caregiver.'
-                      : stage === 'alight'
-                        ? 'If you get off at the wrong stop, stay where you are and press I’m not sure.'
-                        : 'If you are not sure, ask the driver or press I’m not sure.'}
+                  {currentStep.id === 'wait'
+                    ? 'If the bus is late, wait where you are. If you need help, call your caregiver.'
+                    : currentStep.id === 'ride'
+                      ? 'If you miss your stop, stay on the bus and call your caregiver.'
+                      : 'If you are not sure, ask the driver or press I’m not sure.'}
                 </Text>
                 <Text style={{ fontSize: scale(14), lineHeight: bodyLine(14), color: colors.muted }}>
                   You can press “I’m not sure” at any time. It is not a failure.
@@ -545,11 +690,25 @@ export function TripPage() {
               <ActionButton label='Call caregiver' icon='call-outline' variant='ghost' onPress={handleCall} fullWidth />
             </View>
           </View>
-        )}
+        ) : null}
       </View>
       <Toast message={message} />
     </AppFrame>
   )
+}
+
+function coordsForDestination(
+  savedPlaces: PWIDUser['savedPlaces'],
+  destinationName: string
+): LatLng | null {
+  const match = (savedPlaces ?? []).find(
+    place => place.locationName.trim().toLowerCase() === destinationName.trim().toLowerCase()
+  )
+  if (!match?.address?.latlng) return null
+  return {
+    lat: match.address.latlng.latitude,
+    lng: match.address.latlng.longitude
+  }
 }
 
 function StoryView({
@@ -606,7 +765,7 @@ function StoryView({
             {title}
           </Text>
           <Text style={{ fontSize: scale(15), lineHeight: bodyLine(15), color: colors.muted }}>
-            {steps.length} steps · bus {busNumber}
+            {steps.length} steps{busNumber.trim() ? ` · bus ${busNumber.trim()}` : ''}
           </Text>
           <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
             <ActionButton label='Start trip' onPress={onStart} />
@@ -616,10 +775,7 @@ function StoryView({
 
         <View style={{ paddingLeft: 18, borderLeftWidth: 2, borderLeftColor: colors.line, gap: 18, marginLeft: 16 }}>
           {steps.map((step, index) => (
-            <View
-              key={step.id}
-              style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 14, marginLeft: -34 }}
-            >
+            <View key={step.id} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 14, marginLeft: -34 }}>
               <View
                 style={{
                   width: 34,
@@ -635,21 +791,12 @@ function StoryView({
                 <Ionicons name={step.icon} size={scale(17)} color={colors.brand} />
               </View>
               <View style={{ flex: 1, gap: 2, paddingTop: 2 }}>
-                <Text style={{ fontSize: scale(16), fontWeight: '700', color: colors.ink }}>
-                  {step.title}
-                </Text>
-                <Text style={{ fontSize: scale(14), lineHeight: bodyLine(14), color: colors.muted }}>
-                  {step.detail}
-                </Text>
+                <Text style={{ fontSize: scale(16), fontWeight: '700', color: colors.ink }}>{step.title}</Text>
+                <Text style={{ fontSize: scale(14), lineHeight: bodyLine(14), color: colors.muted }}>{step.detail}</Text>
                 {step.photoUrl ? (
                   <Image
                     source={{ uri: step.photoUrl }}
-                    style={{
-                      width: '100%',
-                      height: 150,
-                      borderRadius: radius.md,
-                      marginTop: 8
-                    }}
+                    style={{ width: '100%', height: 150, borderRadius: radius.md, marginTop: 8 }}
                     contentFit='cover'
                     accessibilityLabel={`Photo for ${step.title}`}
                   />
@@ -661,7 +808,6 @@ function StoryView({
             </View>
           ))}
         </View>
-
       </View>
 
       <View style={{ flex: isWide ? 0.8 : undefined, gap: 14, minWidth: 0 }}>
@@ -697,13 +843,11 @@ function StoryView({
                 size={scale(22)}
                 color={checks[item.key] ? colors.success : colors.lineStrong}
               />
-              <Text style={{ fontSize: scale(15), lineHeight: bodyLine(15), color: colors.ink }}>
-                {item.label}
-              </Text>
+              <Text style={{ fontSize: scale(15), lineHeight: bodyLine(15), color: colors.ink }}>{item.label}</Text>
             </Pressable>
           ))}
           <Text style={{ fontSize: scale(13), lineHeight: bodyLine(13), color: colors.muted }}>
-            You can start even if a box is empty. The app will help you fix it.
+            You can start even if a box is empty.
           </Text>
         </View>
 
@@ -720,9 +864,7 @@ function StoryView({
           <Text style={{ fontSize: scale(12), fontWeight: '800', letterSpacing: 0.7, textTransform: 'uppercase', color: colors.muted }}>
             Caregiver
           </Text>
-          <Text style={{ fontSize: scale(17), fontWeight: '700', color: colors.ink }}>
-            Call your caregiver
-          </Text>
+          <Text style={{ fontSize: scale(17), fontWeight: '700', color: colors.ink }}>Call your caregiver</Text>
           <Text style={{ fontSize: scale(14), lineHeight: bodyLine(14), color: colors.muted }}>
             They can stay on the phone until you arrive.
           </Text>
@@ -742,27 +884,18 @@ function TripStatusCard({
   bodyLine
 }: {
   destinationName: string
-  stage: ScreenStage
+  stage: TripStage
   isPractice: boolean
   busNumber: string
   scale: (n: number) => number
   bodyLine: (n: number) => number
 }) {
   return (
-    <View
-      style={{
-        backgroundColor: colors.brandSoft,
-        borderRadius: radius.lg,
-        padding: 18,
-        gap: 8
-      }}
-    >
+    <View style={{ backgroundColor: colors.brandSoft, borderRadius: radius.lg, padding: 18, gap: 8 }}>
       <Text style={{ fontSize: scale(12), fontWeight: '800', letterSpacing: 0.7, textTransform: 'uppercase', color: colors.brand }}>
         {isPractice ? 'Practice trip' : 'On this trip'}
       </Text>
-      <Text style={{ fontSize: scale(19), fontWeight: '800', color: colors.ink }}>
-        {destinationName}
-      </Text>
+      <Text style={{ fontSize: scale(19), fontWeight: '800', color: colors.ink }}>{destinationName}</Text>
       <Text style={{ fontSize: scale(14), lineHeight: bodyLine(14), color: colors.inkSoft }}>
         {tripStatusText(stage, isPractice, busNumber)}
       </Text>
@@ -770,19 +903,21 @@ function TripStatusCard({
   )
 }
 
-function tripStatusText(stage: ScreenStage, isPractice: boolean, busNumber: string) {
-  if (isPractice) return 'Waiting at the bus stop. Nothing is shared in practice.'
+function tripStatusText(stage: TripStage, isPractice: boolean, busNumber: string) {
+  if (isPractice) return 'Practice route. This does not publish a trip.'
   switch (stage) {
-    case 'wait':
-      return 'Waiting at the bus stop. Your caregiver can see this trip.'
-    case 'board':
-      return `The door is open. Get on bus ${busNumber}.`
-    case 'tap':
-      return 'Tap your card near the door.'
-    case 'ride':
-      return `On bus ${busNumber}. 8 stops to go.`
+    case 'waiting':
+      return 'Waiting at the bus stop.'
+    case 'boarding':
+      return `Get on ${busLabel(busNumber)}.`
+    case 'on-bus':
+      return `On ${busLabel(busNumber)}. Watch for your stop.`
+    case 'arriving':
+      return 'Get ready to get off.'
+    case 'arrived':
+      return 'You have arrived.'
     default:
-      return 'Getting ready to get off.'
+      return 'Getting ready to go.'
   }
 }
 
@@ -882,7 +1017,7 @@ function ArrivedView({
         You are here.
       </Text>
       <Text style={{ fontSize: scale(18), lineHeight: bodyLine(18), color: colors.muted, textAlign: 'center' }}>
-        {destinationName}. Your caregiver knows you arrived.
+        {destinationName}. Your trip is finished.
       </Text>
       <View style={{ width: '100%', gap: 10, maxWidth: 420 }}>
         <ActionButton label='Done' onPress={onDone} fullWidth />

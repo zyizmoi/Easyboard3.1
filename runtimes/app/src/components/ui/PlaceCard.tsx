@@ -1,6 +1,7 @@
 'use client'
 
 import { Ionicons } from '@expo/vector-icons'
+import { Image } from 'expo-image'
 import { Pressable, View } from 'react-native'
 import { Text } from '../Text'
 import { usePreferences } from '../../contexts/PreferencesContext'
@@ -9,13 +10,14 @@ import { colors, radius, shadow } from '../../theme/tokens'
 interface PlaceCardProps {
   title: string
   address?: string
+  imageUrl?: string
   icon: keyof typeof Ionicons.glyphMap
   meta?: string
   onPress: () => void
   badge?: string
 }
 
-export function PlaceCard({ title, address, icon, meta, onPress, badge }: PlaceCardProps) {
+export function PlaceCard({ title, address, imageUrl, icon, meta, onPress, badge }: PlaceCardProps) {
   const { scale, bodyLine } = usePreferences()
 
   return (
@@ -43,10 +45,20 @@ export function PlaceCard({ title, address, icon, meta, onPress, badge }: PlaceC
           borderRadius: radius.md,
           backgroundColor: colors.brandSoft,
           alignItems: 'center',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          overflow: 'hidden'
         }}
       >
-        <Ionicons name={icon} size={scale(26)} color={colors.brand} />
+        {imageUrl ? (
+          <Image
+            source={{ uri: imageUrl }}
+            style={{ width: '100%', height: '100%' }}
+            contentFit='cover'
+            accessibilityLabel={`Photo of ${title}`}
+          />
+        ) : (
+          <Ionicons name={icon} size={scale(26)} color={colors.brand} />
+        )}
       </View>
       <View style={{ flex: 1, minWidth: 0 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
