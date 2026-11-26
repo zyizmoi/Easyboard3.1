@@ -28,7 +28,7 @@ type LocationSharingContextType = {
   sharingError: string | null
   autoStopped: boolean
   retrySharing: () => void
-  resetAutoStop: () => void
+  resetAutoStop: (clearSharingError?: boolean) => void
 }
 
 const LocationSharingContext = createContext<LocationSharingContextType | undefined>(undefined)
@@ -537,8 +537,15 @@ export const LocationSharingProvider: React.FC<{ children: React.ReactNode }> = 
     setIsLocationSharingState(share)
   }, [])
 
-  const resetAutoStop = useCallback(() => {
+  const resetAutoStop = useCallback((clearSharingError = false) => {
     setAutoStopped(false)
+    // Starting a live trip is a new attempt. Ending one is not, so the home
+    // retry banner can stay until the traveller chooses to try again.
+    if (clearSharingError) {
+      setSharingError(null)
+      setPermissionDenied(false)
+      permissionDeniedRef.current = false
+    }
     const phone = pwidPhoneRef.current
     if (phone) void clearLocationAutoStop(phone)
   }, [])

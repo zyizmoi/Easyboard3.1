@@ -382,7 +382,9 @@ export function TripPage() {
 
   const startTrip = (practiceMode = isPractice) => {
     if (!journey) return
-    resetAutoStop()
+    // A live trip is a fresh attempt at sharing. A practice run should not
+    // clear a real sharing problem on home.
+    resetAutoStop(!practiceMode)
     setIsPractice(practiceMode)
     startedAt.current = Date.now()
     setStepIndex(0)

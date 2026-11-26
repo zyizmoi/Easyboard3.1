@@ -87,7 +87,7 @@ export function PWIDHome() {
   const router = useRouter()
   const { width } = useWindowDimensions()
   const { scale, bodyLine, preferences, updatePreferences } = usePreferences()
-  const { isLocationSharing } = useLocationSharing()
+  const { isLocationSharing, sharingError, retrySharing } = useLocationSharing()
   const { message, showToast } = useToast()
   const callCaregiver = useCallCaregiver()
 
@@ -320,6 +320,10 @@ export function PWIDHome() {
   }
 
   const twoColumn = isWide && Boolean(activeTrip)
+  const sharingExpected =
+    preferences.privacyMode === 'always' ||
+    (preferences.privacyMode === 'trip-only' &&
+      Boolean(activeTrip && activeTrip.stage !== 'arrived'))
 
   return (
     <AppFrame
@@ -364,6 +368,31 @@ export function PWIDHome() {
               Where do you want to go?
             </Text>
           </View>
+
+          {sharingError && sharingExpected && !isLocationSharing ? (
+            <View
+              style={{
+                backgroundColor: colors.warningSoft,
+                borderRadius: radius.lg,
+                padding: 16,
+                gap: 8
+              }}
+            >
+              <Text style={{ fontSize: scale(16), fontWeight: '800', color: colors.warning }}>
+                Location sharing is off.
+              </Text>
+              <Text style={{ fontSize: scale(14), lineHeight: bodyLine(14), color: colors.inkSoft }}>
+                {sharingError}
+              </Text>
+              <ActionButton
+                label='Try sharing again'
+                icon='refresh-outline'
+                variant='secondary'
+                size='sm'
+                onPress={retrySharing}
+              />
+            </View>
+          ) : null}
 
           <View style={{ gap: 10 }}>
             {savedPlaces.length > 0 ? (

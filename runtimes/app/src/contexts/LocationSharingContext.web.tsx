@@ -27,7 +27,7 @@ type LocationSharingContextType = {
   sharingError: string | null
   autoStopped: boolean
   retrySharing: () => void
-  resetAutoStop: () => void
+  resetAutoStop: (clearSharingError?: boolean) => void
 }
 
 const LocationSharingContext = createContext<LocationSharingContextType | undefined>(undefined)
@@ -275,8 +275,13 @@ export const LocationSharingProvider: React.FC<{ children: React.ReactNode }> = 
     setIsLocationSharingState(share)
   }, [])
 
-  const resetAutoStop = useCallback(() => {
+  const resetAutoStop = useCallback((clearSharingError = false) => {
     setAutoStopped(false)
+    if (clearSharingError) {
+      setSharingError(null)
+      setPermissionDenied(false)
+      permissionDeniedRef.current = false
+    }
     if (pwidPhoneNumber) void clearLocationAutoStop(pwidPhoneNumber)
   }, [pwidPhoneNumber])
 
