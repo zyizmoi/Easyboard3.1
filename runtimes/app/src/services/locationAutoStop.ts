@@ -1,6 +1,5 @@
 import { getStoredItem, removeStoredItem, setStoredItem } from './localStore'
 
-const AUTO_STOP_TTL_MS = 6 * 60 * 60 * 1000
 const key = (phoneNumber: string) => `eb-location-auto-stop:${phoneNumber}`
 
 export interface LocationAutoStop {
@@ -42,7 +41,6 @@ export async function readLocationAutoStop(
     ) {
       return null
     }
-    if (Date.now() - parsed.at > AUTO_STOP_TTL_MS) return null
     return { phoneNumber, reason: parsed.reason, at: parsed.at }
   } catch (error) {
     console.error('Error reading location auto-stop:', error)

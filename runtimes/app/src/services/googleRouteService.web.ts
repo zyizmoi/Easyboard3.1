@@ -83,12 +83,12 @@ export const googleRouteService: IGoogleRouteService = {
           reject(new Error(message))
         },
         {
-          // A rough start point is enough to rank transit options, and high
-          // accuracy waits for GPS indoors. A recent cached fix also avoids
-          // making the traveller wait twice for the same journey.
-          enableHighAccuracy: false,
+          // The origin feeds the walk-to-stop leg, so a network-based or
+          // minute-old fix can point at the wrong stop. Accept a short-lived
+          // cached fix, but ask for GPS accuracy.
+          enableHighAccuracy: true,
           timeout: 15000,
-          maximumAge: 60000
+          maximumAge: 10000
         }
       )
     })

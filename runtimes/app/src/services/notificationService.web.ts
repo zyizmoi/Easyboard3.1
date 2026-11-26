@@ -13,6 +13,7 @@ import type {
 } from './notificationService'
 import { getUserStorage } from './storageService'
 import { getFCMToken, storeFCMToken } from './userService'
+import { setDevicePushToken } from './devicePushToken'
 
 let navigationCallback: NavigationCallback | null = null
 
@@ -78,6 +79,7 @@ export const notificationService: INotificationService = {
         const userData = await getUserStorage()
         if (userData?.phoneNumber) {
           await storeFCMToken(userData.phoneNumber, fcmToken)
+          await setDevicePushToken(userData.phoneNumber, fcmToken)
         }
       }
       return fcmToken

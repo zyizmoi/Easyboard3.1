@@ -48,6 +48,25 @@ function placeIcon(name: string): keyof typeof Ionicons.glyphMap {
   return 'briefcase-outline'
 }
 
+// Realtime Database can stay pending when the phone has no usable network.
+// The trip screen already falls back after five seconds; home needs the same
+// ceiling or it shows the loading state forever.
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('Timed out loading home places')), ms)
+    promise.then(
+      value => {
+        clearTimeout(timer)
+        resolve(value)
+      },
+      error => {
+        clearTimeout(timer)
+        reject(error)
+      }
+    )
+  })
+}
+
 function savedPlaceToHome(place: SavedPlace): HomePlace {
   return {
     key: `saved-${place.locationName}-${place.address?.description || ''}`,
@@ -101,7 +120,10 @@ export function PWIDHome() {
         }
 
         try {
-          const ownData = (await getUserData(storedPwid.phoneNumber)) as PWIDUser | null
+          const ownData = await withTimeout(
+            getUserData(storedPwid.phoneNumber) as Promise<PWIDUser | null>,
+            5000
+          )
           const nextJourneys = ownData?.journeys ?? []
           setJourneys(nextJourneys)
           void cacheJourneys(storedPwid.phoneNumber, nextJourneys)
@@ -119,22 +141,36 @@ export function PWIDHome() {
             )
           }
         } catch (error) {
-          console.error('Error loading home trips:', error)
+          const message = error instanceof Error ? error.message : String(error)
+          if (message !== 'Timed out loading home places') {
+            console.error('Error loading home trips:', error)
+          }
           setFetchFailed(true)
         }
       }
 
       if (storedPwid?.caregiverPhone) {
-        setCaregiver({ phone: storedPwid.caregiverPhone })
+        const caregiverPhone = storedPwid.caregiverPhone
+        setCaregiver({ phone: caregiverPhone })
         if (!isPreview) {
-          try {
-            const caregiverData = await getUserData(storedPwid.caregiverPhone)
-            if (caregiverData?.name) {
-              setCaregiver({ name: caregiverData.name, phone: storedPwid.caregiverPhone })
+          // The name is optional. Do not let its network call hold the home
+          // screen or the refresh spinner open.
+          void (async () => {
+            try {
+              const caregiverData = await withTimeout(
+                getUserData(caregiverPhone),
+                5000
+              )
+              if (caregiverData?.name) {
+                setCaregiver({ name: caregiverData.name, phone: caregiverPhone })
+              }
+            } catch (error) {
+              const message = error instanceof Error ? error.message : String(error)
+              if (message !== 'Timed out loading home places') {
+                console.error('Could not load caregiver name:', error)
+              }
             }
-          } catch (error) {
-            console.error('Could not load caregiver name:', error)
-          }
+          })()
         }
       }
     } catch (error) {

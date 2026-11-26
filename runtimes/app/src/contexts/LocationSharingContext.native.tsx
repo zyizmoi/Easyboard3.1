@@ -96,14 +96,15 @@ if (!TaskManager.isTaskDefined(BACKGROUND_TASK)) {
         if (distance < 20) {
           const reason = 'Arrived at destination'
           await stopPWIDLocationSharing(phone)
-          if (await TaskManager.isTaskRegisteredAsync(BACKGROUND_TASK)) {
-            await Location.stopLocationUpdatesAsync(BACKGROUND_TASK)
-          }
-          // Leave a durable marker for the foreground app. The task can run in
-          // a headless JS context, so React state cannot be updated directly.
+          // Write the marker before unregistering the task. The foreground
+          // poll can otherwise see "task gone, marker absent" in the gap and
+          // report a lost connection instead of an arrival.
           await markLocationAutoStop(phone, reason)
           backgroundState.destination = null
           backgroundState.stoppedPhone = phone
+          if (await TaskManager.isTaskRegisteredAsync(BACKGROUND_TASK)) {
+            await Location.stopLocationUpdatesAsync(BACKGROUND_TASK)
+          }
           try {
             const pwidUser = await getUserData(phone)
             if (pwidUser && pwidUser.userType === 'PWID') {
@@ -228,20 +229,20 @@ export const LocationSharingProvider: React.FC<{ children: React.ReactNode }> = 
     }
   }, [])
 
-  const reconcileAutoStop = useCallback(async (handledByTask: boolean) => {
+  const reconcileAutoStop = useCallback(async () => {
     const phone = pwidPhoneRef.current
     if (!phone) return
     backgroundState.stoppedPhone = null
     setDestinationState(null)
     setAutoStopped(true)
-    if (handledByTask) {
-      // The background task already wrote isSharing: false and sent the
-      // arrival notification. Suppress a second generic stop notification.
-      hasStartedSharingRef.current = false
-      notifiedShareRef.current = false
-      stopReasonRef.current = undefined
-      await clearLocationAutoStop(phone)
-    }
+    // The background task already wrote isSharing: false and sent the
+    // arrival notification. Suppress a second generic stop notification.
+    hasStartedSharingRef.current = false
+    notifiedShareRef.current = false
+    stopReasonRef.current = undefined
+    // Keep the durable marker until the trip ends or starts again. Clearing
+    // it here would let a relaunch start sharing after the traveller is
+    // already at the destination.
     setIsLocationSharingState(false)
   }, [])
 
@@ -255,7 +256,7 @@ export const LocationSharingProvider: React.FC<{ children: React.ReactNode }> = 
       void (async () => {
         const marker = await readLocationAutoStop(phone)
         if (marker || backgroundState.stoppedPhone === phone) {
-          await reconcileAutoStop(true)
+          await reconcileAutoStop()
         }
       })()
     })
@@ -297,6 +298,28 @@ export const LocationSharingProvider: React.FC<{ children: React.ReactNode }> = 
       stopReasonRef.current = undefined
     }
   }, [pwidPhoneNumber])
+
+  const reconcileLostTracking = useCallback(() => {
+    const phone = pwidPhoneRef.current
+    if (!phone) return
+    backgroundState.stoppedPhone = null
+    const shouldNotify = notifiedShareRef.current
+    hasStartedSharingRef.current = false
+    notifiedShareRef.current = false
+    stopReasonRef.current = 'Location sharing stopped on the traveller’s phone'
+    // This is a lost connection, not an arrival. Keep autoStopped false so the
+    // error banner and retry path own the decision to start again.
+    setSharingError('Location sharing stopped. Tap Try location again.')
+    setIsLocationSharingState(false)
+    stopPWIDLocationSharing(phone).catch(error =>
+      console.error('Error clearing location sharing:', error)
+    )
+    if (shouldNotify) {
+      void sendStopNotificationToCaregiver()
+    } else {
+      stopReasonRef.current = undefined
+    }
+  }, [sendStopNotificationToCaregiver])
 
   // Only a PWID account starts sharing automatically. Caregivers never share.
   useEffect(() => {
@@ -359,7 +382,6 @@ export const LocationSharingProvider: React.FC<{ children: React.ReactNode }> = 
       hasStartedSharingRef.current = false
       if (autoStop) {
         notifiedShareRef.current = false
-        await clearLocationAutoStop(pwidPhoneNumber)
         return
       }
       stopPWIDLocationSharing(pwidPhoneNumber).catch(() => {})
@@ -479,7 +501,7 @@ export const LocationSharingProvider: React.FC<{ children: React.ReactNode }> = 
       const marker = await readLocationAutoStop(pwidPhoneNumber)
       if (!active) return
       if (marker || backgroundState.stoppedPhone === pwidPhoneNumber) {
-        await reconcileAutoStop(true)
+        await reconcileAutoStop()
         return
       }
       if (!hasStartedSharingRef.current) return
@@ -489,7 +511,11 @@ export const LocationSharingProvider: React.FC<{ children: React.ReactNode }> = 
       if (!registered) {
         const lateMarker = await readLocationAutoStop(pwidPhoneNumber)
         if (!active) return
-        await reconcileAutoStop(Boolean(lateMarker))
+        if (lateMarker || backgroundState.stoppedPhone === pwidPhoneNumber) {
+          await reconcileAutoStop()
+        } else {
+          reconcileLostTracking()
+        }
       }
     }
     void check()
@@ -498,7 +524,13 @@ export const LocationSharingProvider: React.FC<{ children: React.ReactNode }> = 
       active = false
       clearInterval(timer)
     }
-  }, [isLocationSharing, pwidPhoneNumber, reconcileAutoStop, sessionReady])
+  }, [
+    isLocationSharing,
+    pwidPhoneNumber,
+    reconcileAutoStop,
+    reconcileLostTracking,
+    sessionReady
+  ])
 
   const setIsLocationSharing = useCallback((share: boolean) => {
     if (share && permissionDeniedRef.current) return

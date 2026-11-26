@@ -7,6 +7,11 @@ import { getUserStorage } from '../services/storageService'
 import { subscribeSessionChanged } from '../services/sessionEvents'
 import { getActiveTrip, subscribeToTrip, type ActiveTrip } from '../services/tripStore'
 import {
+  clearLocationAutoStop,
+  markLocationAutoStop,
+  readLocationAutoStop
+} from '../services/locationAutoStop'
+import {
   getUserData,
   stopPWIDLocationSharing,
   updatePWIDLocation
@@ -66,6 +71,15 @@ export const LocationSharingProvider: React.FC<{ children: React.ReactNode }> = 
       const stored = await getUserStorage()
       if (cancelled) return
       setPwidPhoneNumber(stored?.phoneNumber || null)
+      if (stored?.userType === 'PWID' && stored.phoneNumber) {
+        const autoStop = await readLocationAutoStop(stored.phoneNumber)
+        if (cancelled) return
+        if (autoStop) {
+          // A reload must not start sharing again after an arrival.
+          setDestinationState(null)
+          setAutoStopped(true)
+        }
+      }
       setUserType(stored?.userType)
       setPreview(Boolean(stored?.preview))
       if (stored?.userType !== 'PWID') {
@@ -138,8 +152,13 @@ export const LocationSharingProvider: React.FC<{ children: React.ReactNode }> = 
     }
     // A timeout or weak signal is transient. Do not let its banner block the
     // next trip from starting the watch.
-    if (!permissionDeniedRef.current && !autoStopped) setIsLocationSharingState(true)
-  }, [activeTrip, autoStopped, preferences.privacyMode, preview, ready, userType])
+    if (!permissionDeniedRef.current && !autoStopped) {
+      if (preferences.privacyMode === 'always' && pwidPhoneNumber) {
+        void clearLocationAutoStop(pwidPhoneNumber)
+      }
+      setIsLocationSharingState(true)
+    }
+  }, [activeTrip, autoStopped, preferences.privacyMode, preview, pwidPhoneNumber, ready, userType])
 
   useEffect(() => {
     if (!isLocationSharing || !pwidPhoneNumber || userType !== 'PWID' || preview) {
@@ -191,9 +210,12 @@ export const LocationSharingProvider: React.FC<{ children: React.ReactNode }> = 
               target.lng
             )
             if (distance < 20) {
-              setDestinationState(null)
               if (privacyModeRef.current !== 'always') {
                 stopReasonRef.current = 'Arrived at destination'
+                // Persist before changing state so a reload cannot restart
+                // sharing for a trip that already reached its destination.
+                await markLocationAutoStop(pwidPhoneNumber, 'Arrived at destination')
+                setDestinationState(null)
                 setAutoStopped(true)
                 setIsLocationSharingState(false)
               }
@@ -253,18 +275,23 @@ export const LocationSharingProvider: React.FC<{ children: React.ReactNode }> = 
     setIsLocationSharingState(share)
   }, [])
 
-  const resetAutoStop = useCallback(() => setAutoStopped(false), [])
+  const resetAutoStop = useCallback(() => {
+    setAutoStopped(false)
+    if (pwidPhoneNumber) void clearLocationAutoStop(pwidPhoneNumber)
+  }, [pwidPhoneNumber])
 
   const retrySharing = useCallback(() => {
     setAutoStopped(false)
+    if (pwidPhoneNumber) void clearLocationAutoStop(pwidPhoneNumber)
     permissionDeniedRef.current = false
     setPermissionDenied(false)
     setSharingError(null)
     setIsLocationSharingState(true)
-  }, [])
+  }, [pwidPhoneNumber])
 
   const setDestination = useCallback((dest: { lat: number; lng: number } | null) => {
-    if (dest) setAutoStopped(false)
+    // A new start clears the marker through resetAutoStop. Setting a
+    // destination during a resumed trip must not restart an arrived trip.
     setDestinationState(dest)
   }, [])
 

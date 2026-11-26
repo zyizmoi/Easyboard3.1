@@ -119,7 +119,7 @@ export function TransitOptionsPage() {
       ) {
         // A slow or missing fix is a normal condition, not an app crash.
         setErrorMessage(
-          'We could not get your location. Move near a window, then tap Retry.'
+          'We could not find where you are. Tap Retry.'
         )
       } else if (message.includes('not supported')) {
         setErrorMessage('This browser cannot share your location.')

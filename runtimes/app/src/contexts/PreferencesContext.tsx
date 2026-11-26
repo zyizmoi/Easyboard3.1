@@ -34,12 +34,15 @@ const DEFAULT_PREFERENCES: Preferences = {
 const LEGACY_STORAGE_KEY = 'eb-preferences'
 const storageKey = (phoneNumber: string) => `eb-preferences:${phoneNumber || 'guest'}`
 
+function isPrivacyMode(value: unknown): value is PrivacyMode {
+  return value === 'always' || value === 'paused' || value === 'trip-only'
+}
+
 function normalizePreferences(value: unknown): Preferences {
   const parsed = value && typeof value === 'object' ? (value as Partial<Preferences>) : {}
-  const privacyMode: PrivacyMode =
-    parsed.privacyMode === 'always' || parsed.privacyMode === 'paused' || parsed.privacyMode === 'trip-only'
-      ? parsed.privacyMode
-      : DEFAULT_PREFERENCES.privacyMode
+  const privacyMode: PrivacyMode = isPrivacyMode(parsed.privacyMode)
+    ? parsed.privacyMode
+    : DEFAULT_PREFERENCES.privacyMode
   return {
     easyRead: typeof parsed.easyRead === 'boolean' ? parsed.easyRead : DEFAULT_PREFERENCES.easyRead,
     textScale: Math.min(1.3, Math.max(1, Number(parsed.textScale) || 1)),
@@ -100,7 +103,8 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
         if (phoneNumber && stored?.userType === 'PWID' && !stored?.preview) {
           try {
             const profile = (await getUserData(phoneNumber)) as PWIDUser | null
-            if (profile?.privacyMode) {
+            const remotePrivacyMode = profile?.privacyMode
+            if (profile && isPrivacyMode(remotePrivacyMode)) {
               const remoteUpdatedAt = Math.max(
                 0,
                 Number(profile.privacyModeUpdatedAt) || 0
@@ -111,7 +115,7 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
               if (remoteUpdatedAt >= next.privacyUpdatedAt) {
                 next = {
                   ...next,
-                  privacyMode: profile.privacyMode,
+                  privacyMode: remotePrivacyMode,
                   privacyUpdatedAt: remoteUpdatedAt
                 }
               }

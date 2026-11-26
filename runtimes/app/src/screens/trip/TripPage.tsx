@@ -395,6 +395,7 @@ export function TripPage() {
     setStepIndex(-1)
     setActiveTrip(null)
     setDestination(null)
+    resetAutoStop()
     if (preferences.privacyMode !== 'always') setIsLocationSharing(false)
     setIsPractice(false)
     if (profile.phoneNumber && !preview) {
@@ -402,7 +403,14 @@ export function TripPage() {
         console.error('Error clearing active trip:', error)
       )
     }
-  }, [preferences.privacyMode, preview, profile.phoneNumber, setDestination, setIsLocationSharing])
+  }, [
+    preferences.privacyMode,
+    preview,
+    profile.phoneNumber,
+    resetAutoStop,
+    setDestination,
+    setIsLocationSharing
+  ])
 
   const retryJourneyLoad = useCallback(() => {
     setJourney(null)

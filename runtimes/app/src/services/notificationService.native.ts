@@ -16,6 +16,7 @@ import type {
 } from './notificationService'
 import { getUserStorage } from './storageService'
 import { getFCMToken, storeFCMToken } from './userService'
+import { setDevicePushToken } from './devicePushToken'
 
 const DEFAULT_CHANNEL_ID = 'default'
 
@@ -89,6 +90,7 @@ export const notificationService: INotificationService = {
         const userData = await getUserStorage()
         if (userData?.phoneNumber) {
           await storeFCMToken(userData.phoneNumber, fcmToken)
+          await setDevicePushToken(userData.phoneNumber, fcmToken)
         }
       }
       return fcmToken

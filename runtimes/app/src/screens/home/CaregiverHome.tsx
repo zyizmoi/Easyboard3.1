@@ -11,6 +11,7 @@ import { useToast } from '../../hooks/useToast'
 import notificationService from '../../services/notificationService'
 import { getUserStorage } from '../../services/storageService'
 import { isTripExpired, stageLabel, type ActiveTrip } from '../../services/tripStore'
+import { getDevicePushToken } from '../../services/devicePushToken'
 import {
   getFCMToken,
   getPWIDsByCaregiverPhone,
@@ -107,9 +108,18 @@ export function CaregiverHome() {
           return
         }
         // Permission alone is not enough. A missing VAPID key or failed token
-        // registration means push will not arrive.
-        const token = await getFCMToken(stored.phoneNumber)
-        if (active) setNotificationsEnabled(Boolean(token))
+        // registration means push will not arrive. The account only stores one
+        // token, so compare it with this device's token; another phone may have
+        // replaced the account token.
+        const deviceToken = await getDevicePushToken(stored.phoneNumber)
+        if (!deviceToken) {
+          if (active) setNotificationsEnabled(false)
+          return
+        }
+        const accountToken = await getFCMToken(stored.phoneNumber)
+        if (active) {
+          setNotificationsEnabled(Boolean(accountToken && accountToken === deviceToken))
+        }
       } catch (error) {
         console.error('Error checking notification registration:', error)
         if (active) setNotificationsEnabled(false)
